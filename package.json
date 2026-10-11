@@ -1,13 +1,12 @@
 {
-  "name": "bds-pro-realestate",
-  "version": "2.0.0",
-  "description": "BĐS PRO - Hệ Thống Quản Lý Đất Nền Phân Lô Chuyên Nghiệp | Tác giả: Nguyễn Công Dinh (0393990638)",
+  "name": "quanlybdspro",
+  "version": "1.0.0",
+  "description": "BĐS PRO - Hệ Thống Quản Lý Đất Nền Phân Lô | Tác giả: Nguyễn Công Dinh (0393990638)",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo 'Build OK for Vercel Static'",
-    "start": "npx serve ."
+    "build": "node build.js"
   },
-  "author": "Nguyễn Công Dinh (0393990638 - Mỹ Phước - Cần Thơ)",
+  "author": "Nguyễn Công Dinh",
   "license": "MIT"
 }
