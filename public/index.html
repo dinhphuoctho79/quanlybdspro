@@ -517,10 +517,15 @@ document.addEventListener('click', function(e) {
               <!-- BOX ĐỒNG HỒ SỐ & DƯƠNG/ÂM LỊCH -->
               <div class="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-emerald-500/50 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex items-center gap-3">
                 
-                <!-- GIỜ SỐ ĐIỆN TỬ LED PHÁT SÁNG NỔI KHỐI -->
-                <div class="flex items-center gap-1 font-mono text-emerald-400 font-black tracking-widest text-sm sm:text-base drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">
-                  <i class="fa fa-clock text-amber-400 text-xs mr-0.5"></i>
-                  <span id="led-live-clock">--:--:--</span>
+                <!-- GIỜ SỐ ĐIỆN TỬ LED PHÁT SÁNG NỔI KHỐI KÈM BADGE MẠNG ONLINE -->
+                <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-1 font-mono text-emerald-400 font-black tracking-widest text-sm sm:text-base drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">
+                    <i class="fa fa-clock text-amber-400 text-xs mr-0.5"></i>
+                    <span id="led-live-clock">--:--:--</span>
+                  </div>
+                  <span id="led-network-badge" onclick="syncOnlineNetworkTime()" class="px-1.5 py-0.2 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 cursor-pointer shadow-2xs" title="Bấm để đồng bộ lại giờ mạng online">
+                    <i class="fa fa-wifi text-[8px]"></i> ONLINE
+                  </span>
                 </div>
 
                 <div class="h-6 w-px bg-slate-700"></div>
@@ -3749,6 +3754,7 @@ function hideLoadingScreen() {
 function initApp() {
   try { initTheme(); } catch(e) { console.warn("initTheme error:", e); }
   try { initAuthSession(); } catch(e) { console.warn("initAuthSession error:", e); }
+  try { initLedLiveClock(); } catch(e) { console.warn("initLedLiveClock error:", e); }
   hideLoadingScreen();
   try { renderAllTables(); } catch (e) { console.warn("Lỗi render bảng:", e); }
   try { renderDashboardCharts(); } catch (e) { console.warn("Lỗi render biểu đồ:", e); }
@@ -3893,6 +3899,10 @@ function switchTab(tabId) {
   };
   const pageTitle = document.getElementById('page-title');
   if (pageTitle) pageTitle.innerText = titles[tabId] || 'Hệ Thống BĐS';
+
+  if (tabId === 'dashboard') {
+    try { initLedLiveClock(); } catch(e) {}
+  }
 
   if (tabId === 'caidat') {
     try { renderCaiDat(); } catch(e){}
@@ -4864,14 +4874,22 @@ function getVietnameseLunarDate(dd, mm, yy) {
   };
 }
 
-// ================= NÂNG CẤP ĐỒNG HỒ LED 3D & LỊCH ÂM DƯƠNG THỜI GIAN THỰC =================
+// ================= NÂNG CẤP ĐỒNG HỒ LED 3D & LỊCH ÂM DƯƠNG ĐỒNG BỘ MẠNG ONLINE =================
 let CURRENT_CAL_VIEW = {
   month: (new Date()).getMonth() + 1,
   year: (new Date()).getFullYear(),
   selectedDay: (new Date()).getDate()
 };
 
-function initLedLiveClock() {
+let NETWORK_TIME_OFFSET_MS = 0;
+let IS_NETWORK_TIME_SYNCED = false;
+let LED_CLOCK_TIMER = null;
+
+function getLiveNetworkDate() {
+  return new Date(Date.now() + NETWORK_TIME_OFFSET_MS);
+}
+
+function updateClockDisplay() {
   const clockEl = document.getElementById('led-live-clock');
   const solarEl = document.getElementById('led-solar-date');
   const lunarEl = document.getElementById('led-lunar-date');
@@ -4879,45 +4897,133 @@ function initLedLiveClock() {
 
   const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
-  function updateClockDisplay() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    
-    if (clockEl) clockEl.innerText = `${h}:${m}:${s}`;
+  const now = getLiveNetworkDate();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  
+  if (clockEl) clockEl.innerText = `${h}:${m}:${s}`;
 
-    const d = now.getDate();
-    const mo = now.getMonth() + 1;
-    const y = now.getFullYear();
-    const dow = daysOfWeek[now.getDay()];
+  const d = now.getDate();
+  const mo = now.getMonth() + 1;
+  const y = now.getFullYear();
+  const dow = daysOfWeek[now.getDay()];
 
-    if (solarEl) {
-      solarEl.innerText = `${dow}, ${String(d).padStart(2, '0')}/${String(mo).padStart(2, '0')}/${y}`;
-    }
-
-    try {
-      const lunar = getVietnameseLunarDate(d, mo, y);
-      if (lunarEl) {
-        lunarEl.innerText = `Âm lịch: ${String(lunar.day).padStart(2, '0')}/${String(lunar.month).padStart(2, '0')} (${lunar.canChiNam}) • Ngày ${lunar.canChiNgay}`;
-      }
-      if (badgeEl) {
-        if (lunar.isHoangDao) {
-          badgeEl.innerText = 'HOÀNG ĐẠO (TỐT)';
-          badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
-        } else {
-          badgeEl.innerText = 'BÌNH HÒA';
-          badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-500/20 text-slate-300 border border-slate-400/30';
-        }
-      }
-    } catch(err) {
-      console.warn("Lỗi tính âm lịch:", err);
-    }
+  if (solarEl) {
+    solarEl.innerText = `${dow}, ${String(d).padStart(2, '0')}/${String(mo).padStart(2, '0')}/${y}`;
   }
 
-  updateClockDisplay();
-  setInterval(updateClockDisplay, 1000);
+  try {
+    const lunar = getVietnameseLunarDate(d, mo, y);
+    if (lunarEl) {
+      lunarEl.innerText = `Âm lịch: ${String(lunar.day).padStart(2, '0')}/${String(lunar.month).padStart(2, '0')} (${lunar.canChiNam}) • Ngày ${lunar.canChiNgay}`;
+    }
+    if (badgeEl) {
+      if (lunar.isHoangDao) {
+        badgeEl.innerText = 'HOÀNG ĐẠO (TỐT)';
+        badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+      } else {
+        badgeEl.innerText = 'BÌNH HÒA';
+        badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-500/20 text-slate-300 border border-slate-400/30';
+      }
+    }
+  } catch(err) {
+    console.warn("Lỗi tính âm lịch:", err);
+  }
 }
+
+async function syncOnlineNetworkTime() {
+  const badge = document.getElementById('led-network-badge');
+  if (badge) {
+    badge.innerHTML = '<i class="fa fa-rotate fa-spin text-[8px]"></i> ĐANG ĐỒNG BỘ';
+    badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/40 cursor-pointer shadow-2xs';
+  }
+
+  const timeApis = [
+    'https://timeapi.io/api/v1/time/current/zone?timeZone=Asia%2FHo_Chi_Minh',
+    'https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh'
+  ];
+
+  for (const url of timeApis) {
+    try {
+      const t0 = Date.now();
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        let sTime = null;
+        if (data.unixtime) sTime = data.unixtime * 1000;
+        else if (data.dateTime) sTime = new Date(data.dateTime).getTime();
+        else if (data.datetime) sTime = new Date(data.datetime).getTime();
+
+        if (sTime) {
+          const t1 = Date.now();
+          const latency = Math.round((t1 - t0) / 2);
+          NETWORK_TIME_OFFSET_MS = (sTime + latency) - t1;
+          IS_NETWORK_TIME_SYNCED = true;
+          if (badge) {
+            badge.innerHTML = '<i class="fa fa-wifi text-[8px]"></i> ONLINE MẠNG';
+            badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 cursor-pointer shadow-2xs';
+            badge.title = 'Đã đồng bộ chuẩn mạng Internet Việt Nam (GMT+7). Bấm để đồng bộ lại';
+          }
+          updateClockDisplay();
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Backup qua HEAD request lấy Date header
+  try {
+    const t0 = Date.now();
+    const res = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
+    const dateH = res.headers.get('date');
+    if (dateH) {
+      const sTime = new Date(dateH).getTime();
+      const t1 = Date.now();
+      NETWORK_TIME_OFFSET_MS = (sTime + Math.round((t1 - t0) / 2)) - t1;
+      IS_NETWORK_TIME_SYNCED = true;
+      if (badge) {
+        badge.innerHTML = '<i class="fa fa-wifi text-[8px]"></i> ONLINE SERVER';
+        badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 cursor-pointer shadow-2xs';
+        badge.title = 'Đã đồng bộ thời gian từ Web Server. Bấm để đồng bộ lại';
+      }
+      updateClockDisplay();
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback sang giờ thiết bị nếu offline
+  if (badge) {
+    badge.innerHTML = '<i class="fa fa-laptop text-[8px]"></i> GIỜ THIẾT BỊ';
+    badge.className = 'px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-500/20 text-slate-300 border border-slate-400/40 cursor-pointer shadow-2xs';
+    badge.title = 'Đang sử dụng thời gian thực của máy. Bấm để kết nối lại giờ mạng online';
+  }
+  updateClockDisplay();
+}
+
+function initLedLiveClock() {
+  updateClockDisplay();
+
+  if (LED_CLOCK_TIMER) clearInterval(LED_CLOCK_TIMER);
+  LED_CLOCK_TIMER = setInterval(updateClockDisplay, 1000);
+
+  // Kích hoạt đồng bộ mạng online ngay
+  setTimeout(syncOnlineNetworkTime, 100);
+
+  // Định kỳ đồng bộ lại mỗi 15 phút
+  setInterval(syncOnlineNetworkTime, 15 * 60 * 1000);
+}
+
+// TỰ ĐỘNG CHẠY NGAY LẬP TỨC 0ms ĐẢM BẢO ĐỒNG HỒ KHÔNG BAO GIỜ BỊ ĐỨNG
+try {
+  initLedLiveClock();
+} catch(e) {
+  console.warn("Lỗi auto-run initLedLiveClock:", e);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLedLiveClock);
+}
+window.addEventListener('load', initLedLiveClock);
 
 // ================= MODAL LỊCH THÁNG ÂM - DƯƠNG TƯƠNG TÁC =================
 function openLunarCalendarModal() {
