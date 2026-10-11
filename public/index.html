@@ -216,6 +216,17 @@
       }
       setTimeout(dismissLoading, 300);
       window.addEventListener('load', dismissLoading);
+
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('btn-user-profile');
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu && !menu.classList.contains('hidden')) {
+    if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  }
+});
+
     })();
   </script>
 
@@ -1497,6 +1508,36 @@ function resetUserInterfaceToGuest() {
   if (menuTitle) menuTitle.innerText = 'Vui lòng đăng nhập để thao tác';
 }
 
+
+function toggleUserDropdown() {
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu) {
+    menu.classList.toggle('hidden');
+  }
+}
+
+function closeUserDropdown() {
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu) {
+    menu.classList.add('hidden');
+  }
+}
+
+function switchUserRole(roleKey) {
+  closeUserDropdown();
+  const acc = USER_ACCOUNTS[roleKey];
+  if (acc) {
+    CURRENT_USER = acc;
+    try {
+      sessionStorage.setItem('bds_user_account', acc.role);
+      sessionStorage.removeItem('bds_logged_out');
+    } catch(e){}
+    unlockAppFromLogin();
+    applyUserPermissions(acc);
+    showToast(`Đã chuyển sang vai trò: ${acc.title} (${acc.fullName})`, 'success');
+  }
+}
+
 function initAuthSession() {
   try {
     const isLoggedOut = sessionStorage.getItem('bds_logged_out');
@@ -1708,16 +1749,15 @@ function submitUserLogin() {
 
 function logoutUser() {
   closeUserDropdown();
-  if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống BĐS PRO?")) {
-    CURRENT_USER = null;
-    try { 
-      sessionStorage.removeItem('bds_user_account');
-      sessionStorage.setItem('bds_logged_out', '1');
-    } catch(e){}
-    resetUserInterfaceToGuest();
-    lockAppForLogin();
-    openLoginModal(true);
-  }
+  CURRENT_USER = null;
+  try { 
+    sessionStorage.removeItem('bds_user_account');
+    sessionStorage.setItem('bds_logged_out', '1');
+  } catch(e){}
+  resetUserInterfaceToGuest();
+  lockAppForLogin();
+  openLoginModal(true);
+  showToast("Đã đăng xuất khỏi hệ thống!", "success");
 }
 
 // ================= CHỨC NĂNG TÙY BIẾN LOGO CÔNG TY =================
