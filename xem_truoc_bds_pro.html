@@ -1570,6 +1570,28 @@ function applyUserPermissions(user) {
   applyPermissionRestrictions(perm);
 }
 
+function applyPermissionRestrictions(perm) {
+  if (!perm) return;
+  // Ẩn/hiện nút xóa
+  document.querySelectorAll('.btn-action-delete').forEach(btn => {
+    btn.style.display = perm.canDelete ? '' : 'none';
+  });
+  // Ẩn/hiện nút sửa
+  document.querySelectorAll('.btn-action-edit').forEach(btn => {
+    btn.style.display = perm.canEdit ? '' : 'none';
+  });
+  // Ẩn/hiện nút thêm mới dữ liệu
+  document.querySelectorAll('button[onclick*="openAddModal"]').forEach(btn => {
+    btn.style.display = perm.canEdit ? '' : 'none';
+  });
+  // Ẩn/hiện nút cấp quyền nhân viên
+  const btnRbac = document.querySelector('button[onclick*="openEmployeeRbacModal()"]');
+  if (btnRbac) {
+    btnRbac.style.display = perm.canManageUsers ? '' : 'none';
+  }
+}
+
+
 
 function lockAppForLogin() {
   const sidebar = document.getElementById('app-sidebar');
@@ -4624,7 +4646,6 @@ function renderMapMarkers() {
 
     marker.bindPopup(popupHtml);
     marker.on('click', () => openParcelPanel(lo));
-    LOT_MARKERS[lo.MaLo] = marker;
     LOT_MARKERS[lo.MaLo] = marker;
     markersLayer.addLayer(marker);
   });
