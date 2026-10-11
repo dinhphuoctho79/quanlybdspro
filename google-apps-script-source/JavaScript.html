@@ -205,6 +205,25 @@ function lockAppForLogin() {
   if (main) main.classList.add('pointer-events-none', 'filter', 'blur-sm', 'select-none');
 }
 
+
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('app-toast-popup');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast-popup';
+    toast.className = 'fixed top-5 right-5 z-[999999] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-[-20px] opacity-0 pointer-events-none';
+    document.body.appendChild(toast);
+  }
+  
+  const isErr = type === 'error';
+  toast.className = `fixed top-5 right-5 z-[999999] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-bold transition-all duration-300 transform translate-y-0 opacity-100 ${isErr ? 'bg-red-600 text-white' : 'bg-emerald-700 text-white'}`;
+  toast.innerHTML = `<i class="fa ${isErr ? 'fa-circle-exclamation' : 'fa-circle-check'} text-base"></i> <span>${msg}</span>`;
+  
+  setTimeout(() => {
+    toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-[-20px] opacity-0 pointer-events-none');
+  }, 3500);
+}
+
 function unlockAppFromLogin() {
   const sidebar = document.getElementById('app-sidebar');
   const main = document.querySelector('main');
@@ -252,17 +271,21 @@ function quickFillLogin(username, password) {
 }
 
 function submitUserLogin() {
-  const u = (document.getElementById('login-input-username')?.value || '').trim().toLowerCase();
-  const p = (document.getElementById('login-input-password')?.value || '').trim();
+  const uInput = document.getElementById('login-input-username');
+  const pInput = document.getElementById('login-input-password');
+  const u = (uInput?.value || '').trim().toLowerCase();
+  const p = (pInput?.value || '').trim();
 
   const found = Object.values(USER_ACCOUNTS).find(acc => acc.username.toLowerCase() === u);
   if (!found) {
-    alert("❌ Tên đăng nhập không đúng! Vui lòng thử: admin, truongphong, sale, hoặc ketoan");
+    showToast("Tên đăng nhập không đúng! Thử: admin, truongphong, sale, ketoan", "error");
+    if (uInput) uInput.focus();
     return;
   }
 
   if (found.password !== p) {
-    alert("❌ Mật khẩu không đúng! Mật khẩu mẫu mặc định là: 123456");
+    showToast("Mật khẩu không đúng! Mật khẩu mẫu mặc định là: 123456", "error");
+    if (pInput) { pInput.value = ''; pInput.focus(); }
     return;
   }
 
@@ -275,17 +298,17 @@ function submitUserLogin() {
 
   const btnClose = document.getElementById('btn-close-login-modal');
   if (btnClose) btnClose.style.display = 'block';
-  const appLayout = document.querySelector('body > div');
-  if (appLayout) {
-    appLayout.classList.remove('pointer-events-none', 'filter', 'blur-sm', 'select-none');
-  }
 
   unlockAppFromLogin();
   applyUserPermissions(found);
+  
   const modal = document.getElementById('login-modal');
-  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+  if (modal) { 
+    modal.classList.add('hidden'); 
+    modal.style.display = 'none'; 
+  }
 
-  alert(`✅ ĐĂNG NHẬP THÀNH CÔNG!\n\nChào mừng: ${found.fullName}\nChức vụ: ${found.title}\n\nHệ thống đã tự động cấu hình giao diện theo quyền hạn của bạn!`);
+  showToast(`Đăng nhập thành công! Chào mừng ${found.fullName} (${found.title})`, 'success');
 }
 
 function logoutUser() {
