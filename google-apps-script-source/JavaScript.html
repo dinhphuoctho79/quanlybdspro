@@ -38,7 +38,7 @@ document.addEventListener('click', function(e) {
 
 // ================= HỆ THỐNG ĐĂNG NHẬP, PHÂN QUYỀN (RBAC) & QUẢN LÝ LOGO =================
 
-const USER_ACCOUNTS = {
+const DEFAULT_USER_ACCOUNTS = {
   admin: {
     username: 'admin',
     password: '123456',
@@ -72,6 +72,15 @@ const USER_ACCOUNTS = {
     title: 'Kế Toán Doanh Nghiệp'
   }
 };
+
+let USER_ACCOUNTS = { ...DEFAULT_USER_ACCOUNTS };
+try {
+  const customAccs = localStorage.getItem('bds_custom_accounts');
+  if (customAccs) {
+    const parsed = JSON.parse(customAccs);
+    USER_ACCOUNTS = { ...DEFAULT_USER_ACCOUNTS, ...parsed };
+  }
+} catch(e) {}
 
 const ROLE_PERMISSIONS = {
   admin: {
@@ -308,6 +317,16 @@ function openLoginModal(isForced) {
   closeUserDropdown();
   const modal = document.getElementById('login-modal');
   const btnClose = document.getElementById('btn-close-login-modal');
+  const uInput = document.getElementById('login-input-username');
+  const pInput = document.getElementById('login-input-password');
+
+  if (pInput) pInput.value = ''; // Luôn để trống mật khẩu khi mở màn hình đăng nhập
+  if (uInput && !uInput.value) {
+    try {
+      const lastUser = localStorage.getItem('bds_last_username');
+      if (lastUser) uInput.value = lastUser;
+    } catch(e){}
+  }
 
   if (isForced || !CURRENT_USER) {
     if (btnClose) btnClose.style.display = 'none';

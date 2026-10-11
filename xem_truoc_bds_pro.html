@@ -1646,50 +1646,46 @@ document.addEventListener('click', function(e) {
       </div>
 
       <div class="p-6 space-y-4 text-xs">
-        <div class="space-y-3">
+        <div class="space-y-3.5">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Tên Đăng Nhập / Mã Nhân Viên</label>
+            <label class="block font-bold text-slate-700 mb-1">Tên Đăng Nhập / Mã Nhân Viên <span class="text-red-500">*</span></label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><i class="fa fa-user"></i></span>
-              <input type="text" id="login-input-username" value="admin" onkeydown="if(event.key==='Enter') submitUserLogin()" placeholder="VD: admin, truongphong, sale, ketoan" class="w-full pl-9 pr-3 py-2.5 border rounded-xl font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600 text-sm">
+              <input type="text" id="login-input-username" value="" onkeydown="if(event.key==='Enter') submitUserLogin()" placeholder="Nhập tên đăng nhập hoặc mã NV..." class="w-full pl-9 pr-3 py-2.5 border rounded-xl font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600 text-sm">
             </div>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Mật Khẩu</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-bold text-slate-700">Mật Khẩu <span class="text-red-500">*</span></label>
+              <button type="button" onclick="toggleLoginPasswordVisibility()" class="text-[11px] text-slate-500 hover:text-emerald-700 cursor-pointer flex items-center gap-1 transition">
+                <i id="login-pass-eye" class="fa fa-eye"></i> <span id="login-pass-eye-text">Hiện</span>
+              </button>
+            </div>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><i class="fa fa-lock"></i></span>
-              <input type="password" id="login-input-password" value="123456" onkeydown="if(event.key==='Enter') submitUserLogin()" placeholder="Mật khẩu (mặc định: 123456)" class="w-full pl-9 pr-3 py-2.5 border rounded-xl font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600 text-sm">
+              <input type="password" id="login-input-password" value="" onkeydown="if(event.key==='Enter') submitUserLogin()" placeholder="Nhập mật khẩu..." class="w-full pl-9 pr-10 py-2.5 border rounded-xl font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600 text-sm">
             </div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] pt-0.5">
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-600 select-none">
+              <input type="checkbox" id="login-remember-me" checked class="rounded text-emerald-700"> Ghi nhớ đăng nhập
+            </label>
+            <a href="tel:0393990638" class="text-emerald-700 hover:underline font-semibold flex items-center gap-1">
+              <i class="fa fa-circle-question"></i> Quên mật khẩu?
+            </a>
           </div>
           <button onclick="submitUserLogin()" class="w-full bg-[#14532d] hover:bg-[#166534] text-white py-3 rounded-xl font-extrabold text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2">
             <i class="fa fa-right-to-bracket"></i> ĐĂNG NHẬP HỆ THỐNG
           </button>
         </div>
 
-        <div class="border-t border-slate-200 pt-3.5">
-          <p class="text-[11px] font-bold text-slate-500 uppercase mb-2 text-center">Bấm Chọn Nhanh Tài Khoản Mẫu Để Test:</p>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="quickFillLogin('admin', '123456')" class="p-2 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-left transition cursor-pointer">
-              <p class="font-extrabold text-amber-900 text-xs">👑 Giám Đốc (Admin)</p>
-              <p class="text-[10px] text-amber-700">Toàn quyền 12/12 tab</p>
-            </button>
-            <button onclick="quickFillLogin('truongphong', '123456')" class="p-2 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-left transition cursor-pointer">
-              <p class="font-extrabold text-purple-900 text-xs">💼 Trưởng Phòng</p>
-              <p class="text-[10px] text-purple-700">Quản lý bán hàng & NV</p>
-            </button>
-            <button onclick="quickFillLogin('sale', '123456')" class="p-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left transition cursor-pointer">
-              <p class="font-extrabold text-emerald-900 text-xs">🎯 Sale BĐS</p>
-              <p class="text-[10px] text-emerald-700">Xem giỏ hàng, cọc & hoa hồng</p>
-            </button>
-            <button onclick="quickFillLogin('ketoan', '123456')" class="p-2 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-left transition cursor-pointer">
-              <p class="font-extrabold text-blue-900 text-xs">📊 Kế Toán</p>
-              <p class="text-[10px] text-blue-700">Quản lý thu chi & hoa hồng</p>
-            </button>
-          </div>
+        <div class="border-t border-slate-200 pt-3 flex items-center justify-between text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i class="fa fa-shield-halved text-emerald-700"></i> Bảo mật chuẩn doanh nghiệp</span>
+          <span>Hotline: <b>0393990638</b></span>
         </div>
 
-        <div class="text-center text-[11px] text-slate-400 pt-1">
-          Bản quyền phần mềm © 2026 <b>Nguyễn Công Dinh</b> (0393990638)
+        <div class="text-center text-[10px] text-slate-400 pt-0.5">
+          Bản quyền phần mềm © 2026 <b>Nguyễn Công Dinh</b> - BĐS PRO
         </div>
       </div>
     </div>
@@ -1698,7 +1694,7 @@ document.addEventListener('click', function(e) {
   <script>
 // ================= HỆ THỐNG ĐĂNG NHẬP, PHÂN QUYỀN (RBAC) & QUẢN LÝ LOGO =================
 
-const USER_ACCOUNTS = {
+const DEFAULT_USER_ACCOUNTS = {
   admin: {
     username: 'admin',
     password: '123456',
@@ -1732,6 +1728,15 @@ const USER_ACCOUNTS = {
     title: 'Kế Toán Doanh Nghiệp'
   }
 };
+
+let USER_ACCOUNTS = { ...DEFAULT_USER_ACCOUNTS };
+try {
+  const customAccs = localStorage.getItem('bds_custom_accounts');
+  if (customAccs) {
+    const parsed = JSON.parse(customAccs);
+    USER_ACCOUNTS = { ...DEFAULT_USER_ACCOUNTS, ...parsed };
+  }
+} catch(e) {}
 
 const ROLE_PERMISSIONS = {
   admin: {
@@ -1968,6 +1973,16 @@ function openLoginModal(isForced) {
   closeUserDropdown();
   const modal = document.getElementById('login-modal');
   const btnClose = document.getElementById('btn-close-login-modal');
+  const uInput = document.getElementById('login-input-username');
+  const pInput = document.getElementById('login-input-password');
+
+  if (pInput) pInput.value = ''; // Luôn để trống mật khẩu khi mở màn hình đăng nhập
+  if (uInput && !uInput.value) {
+    try {
+      const lastUser = localStorage.getItem('bds_last_username');
+      if (lastUser) uInput.value = lastUser;
+    } catch(e){}
+  }
 
   if (isForced || !CURRENT_USER) {
     if (btnClose) btnClose.style.display = 'none';
