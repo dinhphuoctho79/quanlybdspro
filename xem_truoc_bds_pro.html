@@ -193,6 +193,28 @@
       color: #f1f5f9 !important;
       box-shadow: 0 4px 14px rgba(0,0,0,0.6) !important;
     }
+  
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #deposit-receipt-print-area, #deposit-receipt-print-area * {
+      visibility: visible;
+    }
+    #deposit-receipt-print-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      margin: 0;
+      padding: 15px;
+      background: white !important;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+
   </style>
 </head>
 <body class="bg-[#f8fafc] flex h-screen overflow-hidden font-sans text-slate-800">
@@ -467,7 +489,7 @@ document.addEventListener('click', function(e) {
           <span class="font-bold text-xs text-slate-700 flex items-center gap-2"><i class="fa fa-city text-amber-600"></i> Danh Sách Dự Án</span>
           <div class="flex items-center gap-3">
             <input type="text" id="search-duan" placeholder="Tìm kiếm dự án..." oninput="renderTableDuAn()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
-            <button onclick="openAddModal('DuAn')" class="bg-[#c28e5c] hover:bg-[#a87443] text-white px-3 py-1 rounded text-xs font-bold shadow flex items-center gap-1"><i class="fa fa-plus"></i> Thêm Dự Án</button>
+            <button onclick="openAddModal('DuAn')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="fa fa-circle-plus text-amber-300"></i> Thêm Dự Án</button>
           </div>
         </div>
         <div class="overflow-auto">
@@ -486,7 +508,7 @@ document.addEventListener('click', function(e) {
           <span class="font-bold text-xs text-slate-700 flex items-center gap-2"><i class="fa fa-shapes text-amber-600"></i> Danh Sách Lô Đất</span>
           <div class="flex items-center gap-3">
             <input type="text" id="search-lodat-table" placeholder="Tìm kiếm lô đất..." oninput="renderTableLoDat()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
-            <button onclick="openAddModal('LoDat')" class="bg-[#c28e5c] hover:bg-[#a87443] text-white px-3 py-1 rounded text-xs font-bold shadow flex items-center gap-1"><i class="fa fa-plus"></i> Thêm Lô Đất</button>
+            <button onclick="openAddModal('LoDat')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="fa fa-circle-plus text-amber-300"></i> Thêm Lô Đất</button>
           </div>
         </div>
         <div class="overflow-auto">
@@ -669,7 +691,7 @@ document.addEventListener('click', function(e) {
           <span class="font-bold text-xs text-slate-700 flex items-center gap-2"><i class="fa fa-users text-amber-600"></i> Danh Sách Khách Hàng</span>
           <div class="flex items-center gap-3">
             <input type="text" id="search-khachhang-table" placeholder="Tìm kiếm khách hàng..." oninput="renderTableKhachHang()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
-            <button onclick="openAddModal('KhachHang')" class="bg-[#c28e5c] hover:bg-[#a87443] text-white px-3 py-1 rounded text-xs font-bold shadow flex items-center gap-1"><i class="fa fa-plus"></i> Thêm KH</button>
+            <button onclick="openAddModal('KhachHang')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="fa fa-circle-plus text-amber-300"></i> Thêm Khách Hàng</button>
           </div>
         </div>
         <div class="overflow-auto">
@@ -688,7 +710,7 @@ document.addEventListener('click', function(e) {
           <span class="font-bold text-xs text-slate-700 flex items-center gap-2"><i class="fa fa-file-invoice-dollar text-amber-600"></i> Danh Sách Giao Dịch</span>
           <div class="flex items-center gap-3">
             <input type="text" id="search-giaodich-table" placeholder="Tìm kiếm giao dịch..." oninput="renderTableGiaoDich()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
-            <button onclick="openAddModal('GiaoDich')" class="bg-[#c28e5c] hover:bg-[#a87443] text-white px-3 py-1 rounded text-xs font-bold shadow flex items-center gap-1"><i class="fa fa-plus"></i> Thêm GD</button>
+            <button onclick="openAddModal('GiaoDich')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="fa fa-circle-plus text-amber-300"></i> Thêm Giao Dịch</button>
           </div>
         </div>
         <div class="overflow-auto">
@@ -995,7 +1017,7 @@ document.addEventListener('click', function(e) {
             <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
               <i class="fa fa-sliders text-emerald-700"></i> Trung Tâm Cài Đặt Doanh Nghiệp (Bản Thương Mại)
             </h3>
-            <p class="text-xs text-slate-400">Tùy biến thương hiệu, chính sách hoa hồng, mẫu in báo cáo và cấu hình hệ thống theo công ty</p>
+            <p class="text-xs text-slate-400">Tùy biến thương hiệu, cập nhật logo, ngân hàng VietQR, chính sách hoa hồng và mẫu in phiếu cọc</p>
           </div>
           <button onclick="saveAllCompanySettings()" class="bg-[#14532d] hover:bg-[#166534] text-white px-5 py-2 rounded-lg font-bold text-xs shadow-md flex items-center gap-2 transition cursor-pointer">
             <i class="fa fa-floppy-disk"></i> Lưu Toàn Bộ Cấu Hình
@@ -1003,12 +1025,47 @@ document.addEventListener('click', function(e) {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- CARD 1: THÔNG TIN THƯƠNG HIỆU DOANH NGHIỆP -->
+          <!-- CARD 1: THÔNG TIN THƯƠNG HIỆU DOANH NGHIỆP & CẬP NHẬT LOGO -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
-            <div class="flex items-center gap-2 border-b pb-2 text-slate-800 font-bold text-xs">
-              <i class="fa fa-building text-emerald-700"></i>
-              <span>1. Thông Tin Thương Hiệu Doanh Nghiệp</span>
+            <div class="flex items-center justify-between border-b pb-2 text-slate-800 font-bold text-xs">
+              <div class="flex items-center gap-2">
+                <i class="fa fa-building text-emerald-700"></i>
+                <span>1. Nhận Diện Thương Hiệu & Logo Doanh Nghiệp</span>
+              </div>
+              <span class="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+                Thương Mại Hóa
+              </span>
             </div>
+
+            <!-- KHU VỰC CẬP NHẬT & XEM TRƯỚC LOGO CÔNG TY -->
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+              <label class="block text-[11px] font-bold text-slate-700">Logo Doanh Nghiệp (Hiển thị Header, Sidebar, Phiếu Cọc & Báo Cáo)</label>
+              <div class="flex items-center gap-3">
+                <div id="cfg-logo-preview-box" class="w-20 h-20 rounded-xl border-2 border-dashed border-emerald-400 bg-white p-1.5 flex items-center justify-center overflow-hidden shadow-inner flex-shrink-0">
+                  <img id="cfg-logo-preview" src="https://luong-viet-360.vercel.app/logo-dinhcong.webp" class="max-w-full max-h-full object-contain" alt="Logo Preview" onerror="handlePreviewLogoError()">
+                  <i id="cfg-logo-placeholder" class="fa fa-building-circle-check text-2xl text-slate-300 hidden"></i>
+                </div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="flex flex-wrap gap-1.5">
+                    <input type="file" id="cfg-logo-file-input" accept="image/*" class="hidden" onchange="handleLogoFileUpload(event)">
+                    <button type="button" onclick="document.getElementById('cfg-logo-file-input').click()" class="bg-[#14532d] hover:bg-[#166534] text-white px-3 py-1.5 rounded-lg font-bold text-[11px] shadow-xs flex items-center gap-1.5 cursor-pointer transition">
+                      <i class="fa fa-upload"></i> Tải Logo Từ Máy
+                    </button>
+                    <button type="button" onclick="useDefaultDinhCongLogo()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1.5 rounded-lg font-bold text-[11px] border border-amber-300 cursor-pointer transition">
+                      <i class="fa fa-rotate-left"></i> Mẫu DinhCông
+                    </button>
+                    <button type="button" onclick="removeCompanyLogo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold text-[11px] cursor-pointer transition">
+                      <i class="fa fa-trash"></i> Xóa
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-slate-500">Hỗ trợ PNG, JPG, WebP, SVG. Tự động lưu trữ nội bộ và đồng bộ mọi nơi.</p>
+                </div>
+              </div>
+              <div>
+                <input type="text" id="cfg-COMPANY_LOGO" value="https://luong-viet-360.vercel.app/logo-dinhcong.webp" oninput="updateLogoFromUrl(this.value)" placeholder="Hoặc dán URL logo trực tuyến (https://...)" class="w-full border rounded px-2.5 py-1.5 text-xs text-slate-700 bg-white focus:outline-emerald-600 font-mono">
+              </div>
+            </div>
+
             <div class="space-y-2.5 text-xs">
               <div>
                 <label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Doanh Nghiệp / Sàn BĐS (Đầy đủ)</label>
@@ -1045,11 +1102,87 @@ document.addEventListener('click', function(e) {
             </div>
           </div>
 
-          <!-- CARD 2: CHÍNH SÁCH HOA HỒNG & BÁN HÀNG -->
+          <!-- CARD 2: TÀI KHOẢN NGÂN HÀNG & TỰ ĐỘNG TẠO MÃ VIETQR -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
+            <div class="flex items-center justify-between border-b pb-2 text-slate-800 font-bold text-xs">
+              <div class="flex items-center gap-2">
+                <i class="fa fa-qrcode text-emerald-700"></i>
+                <span>2. Tài Khoản Ngân Hàng & Tự Động Tạo Mã VietQR (Napas 247)</span>
+              </div>
+              <span class="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-300">
+                Chuẩn VietQR
+              </span>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <!-- CHỌN NGÂN HÀNG VIỆT NAM -->
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                  Chọn Ngân Hàng Tại Việt Nam <span class="text-emerald-700 font-semibold">(Hơn 25 ngân hàng liên kết Napas)</span>
+                </label>
+                <select id="cfg-BANK_CODE" onchange="updateBankAndQRPreview()" class="w-full border rounded-lg px-3 py-2 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600 border-slate-300">
+                  <!-- Đổ động danh mục 27 ngân hàng qua JS -->
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Số Tài Khoản (STK) <span class="text-red-500">*</span></label>
+                  <input type="text" id="cfg-BANK_STK" value="0393990638" oninput="updateBankAndQRPreview()" class="w-full border rounded px-3 py-1.5 font-mono font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600" placeholder="Số tài khoản...">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Tên Chủ Tài Khoản (Người thụ hưởng) <span class="text-red-500">*</span></label>
+                  <input type="text" id="cfg-BANK_ACCOUNT_NAME" value="NGUYEN CONG DINH" oninput="updateBankAndQRPreview()" class="w-full border rounded px-3 py-1.5 font-bold uppercase text-slate-800 bg-slate-50 focus:bg-white focus:outline-emerald-600" placeholder="VD: NGUYEN CONG DINH">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Cú Pháp Nội Dung Mặc Định</label>
+                  <input type="text" id="cfg-BANK_MEMO" value="DAT COC BDS PRO" oninput="updateBankAndQRPreview()" class="w-full border rounded px-3 py-1.5 text-slate-800 bg-slate-50 focus:bg-white" placeholder="VD: DAT COC BDS PRO">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Số Tiền Quét Thử (VNĐ)</label>
+                  <input type="number" id="cfg-BANK_TEST_AMOUNT" value="50000000" step="5000000" oninput="updateBankAndQRPreview()" class="w-full border rounded px-3 py-1.5 font-mono font-bold text-emerald-800 bg-slate-50 focus:bg-white">
+                </div>
+              </div>
+
+              <!-- Input ẩn đồng bộ chuỗi BANK_ACCOUNT tương thích ngược -->
+              <input type="hidden" id="cfg-BANK_ACCOUNT" value="MB Bank - STK: 0393990638 - NGUYEN CONG DINH">
+
+              <!-- KHUNG HIỂN THỊ MÃ QR TỰ ĐỘNG SINH (LIVE VIETQR PREVIEW) -->
+              <div class="p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 mt-2 flex items-center gap-3.5">
+                <div class="w-24 h-24 bg-white p-1 rounded-xl border border-emerald-300 shadow-sm flex items-center justify-center flex-shrink-0 cursor-pointer" onclick="openLargeQRModal()" title="Bấm để xem phóng to toàn màn hình">
+                  <img id="cfg-vietqr-preview-img" src="" class="w-full h-full object-contain rounded" alt="Mã VietQR">
+                </div>
+                <div class="flex-1 min-w-0 space-y-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                    <span id="cfg-vietqr-bank-name" class="font-bold text-xs text-slate-800 truncate">MB Bank</span>
+                  </div>
+                  <p class="font-mono text-emerald-900 font-extrabold text-xs">STK: <span id="cfg-vietqr-stk">0393990638</span></p>
+                  <p class="font-bold text-[11px] text-slate-600 uppercase truncate">Chủ TK: <span id="cfg-vietqr-accname">NGUYEN CONG DINH</span></p>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <button type="button" onclick="openLargeQRModal()" class="bg-[#14532d] hover:bg-[#166534] text-white px-2.5 py-1 rounded text-[10px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer transition">
+                      <i class="fa fa-qrcode"></i> Xem Mã Lớn
+                    </button>
+                    <button type="button" onclick="downloadBankQR()" class="bg-white hover:bg-slate-100 text-slate-700 px-2 py-1 rounded text-[10px] font-bold border border-slate-300 shadow-2xs flex items-center gap-1 cursor-pointer transition">
+                      <i class="fa fa-download"></i> Tải Ảnh QR
+                    </button>
+                    <button type="button" onclick="copyBankAccount()" class="bg-white hover:bg-slate-100 text-slate-700 px-2 py-1 rounded text-[10px] font-bold border border-slate-300 shadow-2xs flex items-center gap-1 cursor-pointer transition">
+                      <i class="fa fa-copy"></i> Copy STK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: CHÍNH SÁCH HOA HỒNG & BÁN HÀNG -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
             <div class="flex items-center gap-2 border-b pb-2 text-slate-800 font-bold text-xs">
               <i class="fa fa-percent text-amber-600"></i>
-              <span>2. Chính Sách Hoa Hồng & Quy Định Đặt Cọc</span>
+              <span>3. Chính Sách Hoa Hồng & Quy Định Đặt Cọc</span>
             </div>
             <div class="space-y-2.5 text-xs">
               <div class="grid grid-cols-3 gap-2">
@@ -1077,17 +1210,18 @@ document.addEventListener('click', function(e) {
                 </div>
               </div>
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">Tài Khoản Ngân Hàng Công Ty (Nhận Cọc)</label>
-                <input type="text" id="cfg-BANK_ACCOUNT" value="MB Bank - STK: 0393990638 - Nguyễn Công Dinh" class="w-full border rounded px-3 py-1.5 font-bold text-slate-800 bg-slate-50 focus:bg-white">
+                <p class="text-[11px] text-slate-500 italic">
+                  💡 Mức cọc chuẩn và thời hạn giữ chỗ sẽ tự động áp dụng vào mẫu Phiếu Xác Nhận Đặt Cọc & VietQR khi nhân viên thao tác.
+                </p>
               </div>
             </div>
           </div>
 
-          <!-- CARD 3: TỌA ĐỘ VÀ BẢN ĐỒ GIS (KHU VỰC MIỀN TÂY - ĐBSCL) -->
+          <!-- CARD 4: TỌA ĐỘ VÀ BẢN ĐỒ GIS (KHU VỰC MIỀN TÂY - ĐBSCL) -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
             <div class="flex items-center gap-2 border-b pb-2 text-slate-800 font-bold text-xs">
               <i class="fa fa-map-location-dot text-sky-600"></i>
-              <span>3. Cấu Hình Bản Đồ & Định Vị Tọa Độ GPS (Khu Vực Miền Tây)</span>
+              <span>4. Cấu Hình Bản Đồ & Định Vị Tọa Độ GPS (Khu Vực Miền Tây)</span>
             </div>
             <div class="space-y-2.5 text-xs">
               <div>
@@ -1145,16 +1279,15 @@ document.addEventListener('click', function(e) {
                   </select>
                 </div>
               </div>
-              
             </div>
           </div>
 
-          <!-- CARD 4: QUẢN TRỊ DỮ LIỆU & SAO LƯU -->
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
+          <!-- CARD 5: QUẢN TRỊ DỮ LIỆU & SAO LƯU -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5 md:col-span-2">
             <div class="flex items-center justify-between border-b pb-2 text-slate-800 font-bold text-xs">
               <div class="flex items-center gap-2">
                 <i class="fa fa-database text-emerald-600"></i>
-                <span>4. Quản Trị & Sao Lưu Dữ Liệu Hệ Thống</span>
+                <span>5. Quản Trị & Sao Lưu Dữ Liệu Hệ Thống</span>
               </div>
               <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">
                 An Toàn & Bảo Mật
@@ -1173,7 +1306,7 @@ document.addEventListener('click', function(e) {
             </div>
           </div>
         </div>
-      </section>
+      </section>      </section>
 
     </div>
   </main>
@@ -1198,7 +1331,164 @@ document.addEventListener('click', function(e) {
   </div>
 
   
-      <!-- ================= THANH ĐIỀU HƯỚNG NHANH CHO ĐIỆN THOẠI (BOTTOM NAVIGATION) ================= -->
+      <!-- ================= MODAL XEM MÃ VIETQR PHÓNG TO ================= -->
+  <div id="large-qr-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100000] hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden flex flex-col animate-slide-up text-center">
+      <div class="bg-[#14532d] text-white p-4 flex items-center justify-between">
+        <h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa fa-qrcode text-amber-300"></i> Mã VietQR Thanh Toán / Đặt Cọc</h3>
+        <button onclick="closeLargeQRModal()" class="text-white hover:text-slate-200 cursor-pointer"><i class="fa fa-times text-base"></i></button>
+      </div>
+      <div class="p-5 flex flex-col items-center">
+        <div class="p-2 border-2 border-dashed border-emerald-400 rounded-2xl bg-white shadow-inner mb-3">
+          <img id="modal-large-qr-img" src="" class="w-64 h-auto rounded-xl object-contain mx-auto" alt="VietQR Code">
+        </div>
+        <p id="modal-large-qr-bank-name" class="font-black text-slate-800 text-sm">MB Bank</p>
+        <p id="modal-large-qr-account-info" class="font-mono text-emerald-800 font-extrabold text-base mt-0.5">STK: 0393990638</p>
+        <p id="modal-large-qr-account-name" class="font-bold text-slate-600 text-xs mt-0.5 uppercase">NGUYEN CONG DINH</p>
+        <p class="text-[11px] text-slate-400 mt-2 italic">Quét bằng bất kỳ ứng dụng ngân hàng nào tại Việt Nam</p>
+      </div>
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+        <button onclick="copyBankAccount()" class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-lg transition cursor-pointer">
+          <i class="fa fa-copy"></i> Copy STK
+        </button>
+        <button onclick="downloadBankQR()" class="flex-1 py-2 bg-[#14532d] hover:bg-[#166534] text-white font-bold text-xs rounded-lg transition cursor-pointer">
+          <i class="fa fa-download"></i> Tải Ảnh QR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL XEM VÀ IN PHIẾU ĐẶT CỌC KÈM VIETQR ================= -->
+  <div id="deposit-receipt-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100000] hidden p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[95vh]">
+      <!-- Header thanh công cụ của modal -->
+      <div class="bg-[#14532d] text-white px-5 py-3 flex items-center justify-between no-print">
+        <h3 class="font-extrabold text-sm flex items-center gap-2">
+          <i class="fa fa-file-invoice-dollar text-amber-300"></i> Phiếu Xác Nhận Đặt Cọc Đất Nền
+        </h3>
+        <div class="flex items-center gap-2">
+          <button onclick="printDepositReceipt()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs px-3 py-1.5 rounded shadow cursor-pointer flex items-center gap-1.5 transition">
+            <i class="fa fa-print"></i> In Phiếu (A4)
+          </button>
+          <button onclick="closeDepositReceiptModal()" class="text-white hover:text-slate-200 p-1 cursor-pointer">
+            <i class="fa fa-times text-base"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Nội dung phiếu đặt cọc để in ấn (Print Area) -->
+      <div id="deposit-receipt-print-area" class="p-6 md:p-8 space-y-4 text-slate-800 text-xs overflow-y-auto bg-white">
+        <!-- Đầu phiếu: Logo & Thông tin công ty -->
+        <div class="flex items-start justify-between border-b-2 border-emerald-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-16 h-16 rounded-xl border border-slate-200 p-1 flex items-center justify-center bg-white shadow-xs overflow-hidden">
+              <img id="receipt-company-logo" src="https://luong-viet-360.vercel.app/logo-dinhcong.webp" class="max-w-full max-h-full object-contain" alt="Logo">
+            </div>
+            <div>
+              <h2 id="receipt-company-name" class="font-black text-sm text-[#14532d] uppercase">CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT</h2>
+              <p id="receipt-company-slogan" class="text-[10px] text-amber-700 italic font-medium">Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa</p>
+              <p id="receipt-company-address" class="text-[11px] text-slate-600 mt-0.5">Địa chỉ: Mỹ Phước - Cần Thơ</p>
+              <p id="receipt-company-hotline" class="text-[11px] text-slate-600">Hotline: 0393990638 | MST: 1801689999</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="inline-block bg-emerald-50 text-emerald-800 font-mono font-bold px-2 py-1 rounded border border-emerald-300 text-[11px]">
+              Số: <span id="receipt-voucher-no">PC-0001</span>
+            </span>
+            <p id="receipt-date-text" class="text-[10px] text-slate-400 mt-1">Ngày: 11/10/2026</p>
+          </div>
+        </div>
+
+        <!-- Tiêu đề phiếu -->
+        <div class="text-center pt-2">
+          <h1 class="text-base md:text-lg font-black text-slate-900 tracking-wide uppercase">GIẤY XÁC NHẬN ĐẶT CỌC / GIỮ CHỖ</h1>
+          <p class="text-[11px] text-slate-500 italic">(V/v giao dịch chuyển nhượng quyền sử dụng đất nền phân lô)</p>
+        </div>
+
+        <!-- Bên nhận đặt cọc & Bên đặt cọc -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <p class="font-bold text-[#14532d] uppercase text-[11px]">I. BÊN NHẬN ĐẶT CỌC (BÊN BÁN):</p>
+            <p><span class="font-semibold text-slate-600">Đại diện:</span> <b id="receipt-rep-name">Nguyễn Công Dinh</b></p>
+            <p><span class="font-semibold text-slate-600">Chức vụ:</span> Giám Đốc</p>
+            <p><span class="font-semibold text-slate-600">Điện thoại:</span> <span id="receipt-rep-phone">0393990638</span></p>
+          </div>
+          <div>
+            <p class="font-bold text-sky-800 uppercase text-[11px]">II. BÊN ĐẶT CỌC (BÊN MUA):</p>
+            <p><span class="font-semibold text-slate-600">Họ và tên:</span> <b id="receipt-buyer-name">Khách hàng</b></p>
+            <p><span class="font-semibold text-slate-600">Số CCCD/CMND:</span> <span id="receipt-buyer-id">092098000xxx</span></p>
+            <p><span class="font-semibold text-slate-600">Số điện thoại:</span> <b id="receipt-buyer-phone">090xxxxxxx</b></p>
+          </div>
+        </div>
+
+        <!-- Thông tin lô đất -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 font-bold text-slate-700">
+              <tr>
+                <th class="p-2 border-b">Mã Lô</th>
+                <th class="p-2 border-b">Tên Lô / Vị Trí</th>
+                <th class="p-2 border-b">Dự Án</th>
+                <th class="p-2 border-b text-right">Diện Tích</th>
+                <th class="p-2 border-b text-right">Đơn Giá / m²</th>
+                <th class="p-2 border-b text-right">Tổng Giá Trị</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="font-medium">
+                <td id="receipt-lot-code" class="p-2 border-b font-bold text-slate-900">L0001</td>
+                <td id="receipt-lot-name" class="p-2 border-b font-bold text-emerald-800">Lô A1</td>
+                <td id="receipt-lot-project" class="p-2 border-b text-slate-600">DA001 - Mekong Riverside</td>
+                <td id="receipt-lot-area" class="p-2 border-b text-right font-mono">101 m²</td>
+                <td id="receipt-lot-unitprice" class="p-2 border-b text-right font-mono">26.091.780 đ</td>
+                <td id="receipt-lot-totalprice" class="p-2 border-b text-right font-black text-slate-900">2.6 tỷ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mức cọc và thanh toán kèm VIETQR -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200">
+          <div class="md:col-span-2 space-y-1.5">
+            <p class="text-xs"><span class="font-bold text-slate-700">Số tiền đặt cọc:</span> <span id="receipt-deposit-amount" class="text-base font-black text-rose-700">50.000.000 VNĐ</span></p>
+            <p class="text-[11px] text-slate-600"><span class="font-bold">Bằng chữ:</span> <i id="receipt-deposit-words">Năm mươi triệu đồng chẵn</i></p>
+            <p class="text-[11px] text-slate-600"><span class="font-bold">Thời hạn giữ chỗ:</span> <span id="receipt-hold-days">7 ngày</span> (kể từ ngày lập phiếu)</p>
+            <p class="text-[11px] text-slate-600"><span class="font-bold">Tài khoản thụ hưởng:</span> <b id="receipt-bank-info" class="text-emerald-800">MB Bank - STK: 0393990638 (NGUYEN CONG DINH)</b></p>
+          </div>
+          <div class="flex flex-col items-center justify-center p-2 bg-white rounded-xl border border-emerald-300 shadow-xs">
+            <img id="receipt-vietqr-img" src="" class="w-32 h-32 object-contain rounded" alt="VietQR Đặt Cọc">
+            <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-tighter mt-1">Quét mã chuyển cọc ngay</span>
+          </div>
+        </div>
+
+        <!-- Chữ ký 2 bên -->
+        <div class="grid grid-cols-2 gap-4 pt-4 text-center">
+          <div>
+            <p class="font-bold text-slate-700 text-xs uppercase">BÊN ĐẶT CỌC</p>
+            <p class="text-[10px] text-slate-400 italic">(Ký và ghi rõ họ tên)</p>
+            <div class="h-16"></div>
+            <p id="receipt-sign-buyer" class="font-semibold text-slate-800">Khách hàng</p>
+          </div>
+          <div>
+            <p class="font-bold text-slate-700 text-xs uppercase">ĐẠI DIỆN BÊN NHẬN CỌC</p>
+            <p class="text-[10px] text-slate-400 italic">(Ký, đóng dấu và ghi rõ họ tên)</p>
+            <div class="h-16"></div>
+            <p id="receipt-sign-rep" class="font-bold text-[#14532d]">Nguyễn Công Dinh</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 no-print">
+        <button onclick="closeDepositReceiptModal()" class="px-4 py-2 border rounded-lg text-slate-600 font-bold text-xs hover:bg-slate-100 cursor-pointer">Đóng</button>
+        <button onclick="printDepositReceipt()" class="px-5 py-2 bg-[#14532d] hover:bg-[#166534] text-white rounded-lg font-extrabold text-xs shadow flex items-center gap-1.5 cursor-pointer">
+          <i class="fa fa-print"></i> In Phiếu Cọc Ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= THANH ĐIỀU HƯỚNG NHANH CHO ĐIỆN THOẠI (BOTTOM NAVIGATION) ================= -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-around z-40 shadow-lg text-[10px] font-bold text-slate-500">
     <button onclick="switchTab('dashboard')" id="bnav-dashboard" class="flex flex-col items-center justify-center flex-1 h-full text-emerald-800 transition cursor-pointer">
       <i class="fa fa-th-large text-base"></i>
@@ -1449,6 +1739,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-amber-100 text-amber-800',
     avatarBg: 'bg-amber-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'],
+    canEdit: true,
     canEditConfig: true,
     canDelete: true,
     canManageUsers: true
@@ -1458,8 +1749,9 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-purple-100 text-purple-800',
     avatarBg: 'bg-purple-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'nhanvien', 'hoahong', 'baocao'],
+    canEdit: true,
     canEditConfig: false,
-    canDelete: false,
+    canDelete: true,
     canManageUsers: false
   },
   sale: {
@@ -1467,6 +1759,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-emerald-100 text-emerald-800',
     avatarBg: 'bg-emerald-600',
     allowedTabs: ['lodat', 'map', 'khachhang', 'giaodich', 'hoahong'],
+    canEdit: true,
     canEditConfig: false,
     canDelete: false,
     canManageUsers: false
@@ -1476,6 +1769,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-blue-100 text-blue-800',
     avatarBg: 'bg-blue-600',
     allowedTabs: ['dashboard', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'hoahong', 'baocao'],
+    canEdit: true,
     canEditConfig: false,
     canDelete: false,
     canManageUsers: false
@@ -1613,17 +1907,20 @@ function applyUserPermissions(user) {
 
 function applyPermissionRestrictions(perm) {
   if (!perm) return;
+  const canEdit = perm.canEdit !== false;
+  const canDelete = perm.canDelete === true;
+
   // Ẩn/hiện nút xóa
   document.querySelectorAll('.btn-action-delete').forEach(btn => {
-    btn.style.display = perm.canDelete ? '' : 'none';
+    btn.style.display = canDelete ? '' : 'none';
   });
   // Ẩn/hiện nút sửa
   document.querySelectorAll('.btn-action-edit').forEach(btn => {
-    btn.style.display = perm.canEdit ? '' : 'none';
+    btn.style.display = canEdit ? '' : 'none';
   });
-  // Ẩn/hiện nút thêm mới dữ liệu
+  // Ẩn/hiện nút thêm mới dữ liệu (Dự Án, Khách Hàng, Lô Đất, Giao Dịch...)
   document.querySelectorAll('button[onclick*="openAddModal"]').forEach(btn => {
-    btn.style.display = perm.canEdit ? '' : 'none';
+    btn.style.display = canEdit ? '' : 'none';
   });
   // Ẩn/hiện nút cấp quyền nhân viên
   const btnRbac = document.querySelector('button[onclick*="openEmployeeRbacModal()"]');
@@ -2968,6 +3265,10 @@ function switchTab(tabId) {
   const pageTitle = document.getElementById('page-title');
   if (pageTitle) pageTitle.innerText = titles[tabId] || 'Hệ Thống BĐS';
 
+  if (tabId === 'caidat') {
+    try { renderCaiDat(); } catch(e){}
+  }
+
   if (tabId === 'map') {
     setTimeout(() => {
       initMap();
@@ -3088,6 +3389,7 @@ function renderTableLoDat() {
         <td class="text-slate-600">${item.Huong || ''}</td>
         <td class="text-center"><span class="stat-badge" style="background:${cfg.bgBadge}; color:${cfg.textBadge};">${st.toUpperCase()}</span></td>
         <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openDepositReceiptModal('${item.MaLo}')" class="p-1 px-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="In phiếu cọc & VietQR"><i class="fa fa-qrcode"></i></button>
           <button onclick="viewLotOnMap('${item.MaLo}')" class="p-1 px-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="Định vị lô trên bản đồ"><i class="fa fa-map-location-dot"></i></button>
           <button onclick="openEditModal('LoDat', '${item.MaLo}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
           <button onclick="confirmDelete('LoDat', 'MaLo', '${item.MaLo}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
@@ -3162,6 +3464,7 @@ function renderTableGiaoDich() {
         <td class="text-slate-600">${item.PTThanhToan}</td>
         <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
         <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openDepositReceiptModal('${item.MaLo}')" class="p-1 px-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="In phiếu cọc & VietQR"><i class="fa fa-file-invoice-dollar"></i></button>
           <button onclick="openEditModal('GiaoDich', '${item.MaGD}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
           <button onclick="confirmDelete('GiaoDich', 'MaGD', '${item.MaGD}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
         </td>
@@ -3515,8 +3818,230 @@ function renderTableHoaHong() {
   }).join('');
 }
 
+// ================= DANH MỤC NGÂN HÀNG VIỆT NAM & TỰ TẠO MÃ VIETQR NAPAS 247 =================
+const VIETNAM_BANKS = [
+  { code: 'MB', bin: '970422', shortName: 'MBBank', name: 'Ngân hàng Quân Đội' },
+  { code: 'VCB', bin: '970436', shortName: 'Vietcombank', name: 'Ngân hàng Ngoại Thương VN' },
+  { code: 'TCB', bin: '970407', shortName: 'Techcombank', name: 'Ngân hàng Kỹ Thương VN' },
+  { code: 'ICB', bin: '970415', shortName: 'VietinBank', name: 'Ngân hàng Công Thương VN' },
+  { code: 'BIDV', bin: '970418', shortName: 'BIDV', name: 'Ngân hàng Đầu tư & Phát triển VN' },
+  { code: 'ACB', bin: '970416', shortName: 'ACB', name: 'Ngân hàng Á Châu' },
+  { code: 'VPB', bin: '970432', shortName: 'VPBank', name: 'Ngân hàng VN Thịnh Vượng' },
+  { code: 'TPB', bin: '970423', shortName: 'TPBank', name: 'Ngân hàng Tiên Phong' },
+  { code: 'STB', bin: '970403', shortName: 'Sacombank', name: 'Ngân hàng Sài Gòn Thương Tín' },
+  { code: 'VBA', bin: '970405', shortName: 'Agribank', name: 'Ngân hàng Nông nghiệp & PTNT VN' },
+  { code: 'HDB', bin: '970437', shortName: 'HDBank', name: 'Ngân hàng Phát triển TP.HCM' },
+  { code: 'VIB', bin: '970441', shortName: 'VIB', name: 'Ngân hàng Quốc tế VN' },
+  { code: 'SHB', bin: '970443', shortName: 'SHB', name: 'Ngân hàng Sài Gòn - Hà Nội' },
+  { code: 'OCB', bin: '970448', shortName: 'OCB', name: 'Ngân hàng Phương Đông' },
+  { code: 'MSB', bin: '970426', shortName: 'MSB', name: 'Ngân hàng Hàng Hải VN' },
+  { code: 'LPB', bin: '970449', shortName: 'LPBank', name: 'Ngân hàng Lộc Phát Việt Nam' },
+  { code: 'SEAB', bin: '970440', shortName: 'SeABank', name: 'Ngân hàng Đông Nam Á' },
+  { code: 'NAB', bin: '970428', shortName: 'Nam A Bank', name: 'Ngân hàng Nam Á' },
+  { code: 'BAB', bin: '970409', shortName: 'Bac A Bank', name: 'Ngân hàng Bắc Á' },
+  { code: 'BVB', bin: '970438', shortName: 'BaoVietBank', name: 'Ngân hàng Bảo Việt' },
+  { code: 'KLB', bin: '970452', shortName: 'Kienlongbank', name: 'Ngân hàng Kiên Long' },
+  { code: 'VAB', bin: '970427', shortName: 'VietABank', name: 'Ngân hàng Việt Á' },
+  { code: 'NCB', bin: '970419', shortName: 'NCB', name: 'Ngân hàng Quốc Dân' },
+  { code: 'BVBank', bin: '970454', shortName: 'BVBank', name: 'Ngân hàng Bản Việt' },
+  { code: 'SGICB', bin: '970400', shortName: 'Saigonbank', name: 'Ngân hàng Sài Gòn Công Thương' },
+  { code: 'TIMO', bin: '963388', shortName: 'Timo', name: 'Ngân hàng số Timo by BVBank' },
+  { code: 'CAKE', bin: '546034', shortName: 'Cake by VPBank', name: 'Ngân hàng số Cake by VPBank' }
+];
+
+function initBankSelectOptions() {
+  const sel = document.getElementById('cfg-BANK_CODE');
+  if (!sel) return;
+  if (sel.options.length === 0) {
+    sel.innerHTML = VIETNAM_BANKS.map(b => 
+      `<option value="${b.code}">${b.shortName} - ${b.name} (${b.code})</option>`
+    ).join('');
+  }
+}
+
+function getVietQrImageUrl(bankCode, stk, accountName, amount, memo) {
+  const bCode = bankCode || 'MB';
+  const acc = (stk || '0393990638').replace(/\s+/g, '');
+  const amt = Number(amount) || 0;
+  const addInfo = encodeURIComponent((memo || 'DAT COC BDS PRO').trim());
+  const accName = encodeURIComponent((accountName || 'NGUYEN CONG DINH').trim().toUpperCase());
+  return `https://img.vietqr.io/image/${bCode}-${acc}-compact2.png?amount=${amt}&addInfo=${addInfo}&accountName=${accName}`;
+}
+
+function updateBankAndQRPreview() {
+  initBankSelectOptions();
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const accountName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const memo = (document.getElementById('cfg-BANK_MEMO')?.value || 'DAT COC BDS PRO').trim();
+  const testAmount = document.getElementById('cfg-BANK_TEST_AMOUNT')?.value || '50000000';
+
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+  const qrUrl = getVietQrImageUrl(bankCode, stk, accountName, testAmount, memo);
+
+  const qrImg = document.getElementById('cfg-vietqr-preview-img');
+  if (qrImg) qrImg.src = qrUrl;
+
+  const bNameEl = document.getElementById('cfg-vietqr-bank-name');
+  if (bNameEl) bNameEl.innerText = `${bankObj.shortName} - ${bankObj.name}`;
+
+  const stkEl = document.getElementById('cfg-vietqr-stk');
+  if (stkEl) stkEl.innerText = stk;
+
+  const nameEl = document.getElementById('cfg-vietqr-accname');
+  if (nameEl) nameEl.innerText = accountName;
+
+  const combinedAccount = `${bankObj.shortName} - STK: ${stk} - ${accountName}`;
+  const hiddenAcc = document.getElementById('cfg-BANK_ACCOUNT');
+  if (hiddenAcc) hiddenAcc.value = combinedAccount;
+}
+
+function openLargeQRModal() {
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const accountName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const memo = (document.getElementById('cfg-BANK_MEMO')?.value || 'DAT COC BDS PRO').trim();
+  const testAmount = document.getElementById('cfg-BANK_TEST_AMOUNT')?.value || '50000000';
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+
+  const qrUrl = getVietQrImageUrl(bankCode, stk, accountName, testAmount, memo);
+
+  const mImg = document.getElementById('modal-large-qr-img');
+  if (mImg) mImg.src = qrUrl;
+  const mBank = document.getElementById('modal-large-qr-bank-name');
+  if (mBank) mBank.innerText = `${bankObj.shortName} - ${bankObj.name}`;
+  const mInfo = document.getElementById('modal-large-qr-account-info');
+  if (mInfo) mInfo.innerText = `STK: ${stk}`;
+  const mName = document.getElementById('modal-large-qr-account-name');
+  if (mName) mName.innerText = accountName;
+
+  const modal = document.getElementById('large-qr-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeLargeQRModal() {
+  const modal = document.getElementById('large-qr-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function downloadBankQR() {
+  const qrImg = document.getElementById('cfg-vietqr-preview-img');
+  if (!qrImg || !qrImg.src) return;
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+
+  const a = document.createElement('a');
+  a.href = qrImg.src;
+  a.download = `VietQR_${bankCode}_${stk}.png`;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('Đang mở/tải ảnh mã VietQR...', 'success');
+}
+
+function copyBankAccount() {
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(stk).then(() => {
+      showToast(`Đã sao chép số tài khoản: ${stk}`, 'success');
+    }).catch(() => {
+      showToast(`Số tài khoản: ${stk}`, 'info');
+    });
+  } else {
+    showToast(`Số tài khoản: ${stk}`, 'info');
+  }
+}
+
+// --- XEM & IN PHIẾU XÁC NHẬN ĐẶT CỌC KÈM VIETQR ---
+function openDepositReceiptModal(maLo) {
+  const lot = (STORE.LoDat || []).find(l => l.MaLo === maLo) || (STORE.LoDat && STORE.LoDat[0]) || {
+    MaLo: maLo || 'L0001', TenLo: 'Lô A1', MaDuAn: 'DA001', DienTich: 101, GiaM2: 26091780, TongGia: '2.6 tỷ'
+  };
+
+  const compName = document.getElementById('cfg-COMPANY_NAME')?.value || 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT';
+  const compAuthor = document.getElementById('cfg-AUTHOR')?.value || 'Nguyễn Công Dinh';
+  const compHotline = document.getElementById('cfg-HOTLINE')?.value || '0393990638';
+  const compAddress = document.getElementById('cfg-ADDRESS')?.value || 'Mỹ Phước - Cần Thơ';
+  const compTax = document.getElementById('cfg-TAX_ID')?.value || '1801689999';
+  const compSlogan = document.getElementById('cfg-SLOGAN')?.value || 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa';
+  const compLogo = document.getElementById('cfg-COMPANY_LOGO')?.value || 'https://luong-viet-360.vercel.app/logo-dinhcong.webp';
+
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const bankStk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const bankAccName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const depositMin = Number(document.getElementById('cfg-DEPOSIT_MIN')?.value || 50000000);
+  const holdDays = document.getElementById('cfg-HOLD_DAYS')?.value || '7';
+
+  const logoEl = document.getElementById('receipt-company-logo');
+  if (logoEl) logoEl.src = compLogo;
+  const nameEl = document.getElementById('receipt-company-name');
+  if (nameEl) nameEl.innerText = compName;
+  const sloganEl = document.getElementById('receipt-company-slogan');
+  if (sloganEl) sloganEl.innerText = compSlogan;
+  const addrEl = document.getElementById('receipt-company-address');
+  if (addrEl) addrEl.innerText = 'Địa chỉ: ' + compAddress;
+  const hotEl = document.getElementById('receipt-company-hotline');
+  if (hotEl) hotEl.innerText = `Hotline: ${compHotline} | MST: ${compTax}`;
+
+  const repEl = document.getElementById('receipt-rep-name');
+  if (repEl) repEl.innerText = compAuthor;
+  const repPhEl = document.getElementById('receipt-rep-phone');
+  if (repPhEl) repPhEl.innerText = compHotline;
+  const signRep = document.getElementById('receipt-sign-rep');
+  if (signRep) signRep.innerText = compAuthor;
+
+  const codeEl = document.getElementById('receipt-lot-code');
+  if (codeEl) codeEl.innerText = lot.MaLo || '';
+  const lotNameEl = document.getElementById('receipt-lot-name');
+  if (lotNameEl) lotNameEl.innerText = lot.TenLo || '';
+  const lotProjEl = document.getElementById('receipt-lot-project');
+  if (lotProjEl) lotProjEl.innerText = lot.MaDuAn || 'Dự án phân lô';
+  const lotAreaEl = document.getElementById('receipt-lot-area');
+  if (lotAreaEl) lotAreaEl.innerText = (lot.DienTich || 100) + ' m²';
+  const lotPriceEl = document.getElementById('receipt-lot-unitprice');
+  if (lotPriceEl) lotPriceEl.innerText = Number(lot.GiaM2 || 0).toLocaleString('vi-VN') + ' đ';
+  const lotTotalEl = document.getElementById('receipt-lot-totalprice');
+  const formattedTotal = typeof lot.TongGia === 'string' ? lot.TongGia : (Number(lot.TongGia || (lot.DienTich * lot.GiaM2)) / 1e9).toFixed(1) + ' tỷ';
+  if (lotTotalEl) lotTotalEl.innerText = formattedTotal;
+
+  const depAmtEl = document.getElementById('receipt-deposit-amount');
+  if (depAmtEl) depAmtEl.innerText = Number(depositMin).toLocaleString('vi-VN') + ' VNĐ';
+  const holdEl = document.getElementById('receipt-hold-days');
+  if (holdEl) holdEl.innerText = holdDays + ' ngày';
+
+  const bankInfoEl = document.getElementById('receipt-bank-info');
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+  if (bankInfoEl) bankInfoEl.innerText = `${bankObj.shortName} - STK: ${bankStk} (${bankAccName})`;
+
+  const memo = `COC LO ${lot.TenLo || lot.MaLo} ${lot.MaLo}`;
+  const qrUrl = getVietQrImageUrl(bankCode, bankStk, bankAccName, depositMin, memo);
+  const receiptQr = document.getElementById('receipt-vietqr-img');
+  if (receiptQr) receiptQr.src = qrUrl;
+
+  const receiptDate = document.getElementById('receipt-date-text');
+  const today = new Date();
+  if (receiptDate) receiptDate.innerText = `Ngày: ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+  const voucherNo = document.getElementById('receipt-voucher-no');
+  if (voucherNo) voucherNo.innerText = `PC-${lot.MaLo || '001'}-${today.getFullYear()}`;
+
+  const modal = document.getElementById('deposit-receipt-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeDepositReceiptModal() {
+  const modal = document.getElementById('deposit-receipt-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function printDepositReceipt() {
+  window.print();
+}
+
 // --- TRUNG TÂM CÀI ĐẶT DOANH NGHIỆP THƯƠNG MẠI ---
 function renderCaiDat() {
+  initBankSelectOptions();
+
   const defaults = {
     COMPANY_NAME: 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT',
     COMPANY_LOGO: 'https://luong-viet-360.vercel.app/logo-dinhcong.webp',
@@ -3526,19 +4051,33 @@ function renderCaiDat() {
     TAX_ID: '1801689999',
     EMAIL: 'lienhe@bdsangiaphat.vn',
     SLOGAN: 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa',
+    BANK_CODE: 'MB',
+    BANK_STK: '0393990638',
+    BANK_ACCOUNT_NAME: 'NGUYEN CONG DINH',
+    BANK_MEMO: 'DAT COC BDS PRO',
+    BANK_TEST_AMOUNT: '50000000',
+    BANK_ACCOUNT: 'MB Bank - STK: 0393990638 - NGUYEN CONG DINH',
     HH_RATE_SALES: '3.0',
     HH_RATE_LEAD: '0.8',
     HH_RATE_DIR: '0.5',
     DEPOSIT_MIN: '50000000',
     HOLD_DAYS: '7',
-    BANK_ACCOUNT: 'MB Bank - STK: 0393990638 - Nguyễn Công Dinh',
     MAP_REGION_PRESET: 'mientay_all',
     MAP_LAT: '10.000000',
     MAP_LNG: '105.700000',
     MAP_ZOOM: '9',
-    MAP_LAYER: 'osm',
-    
+    MAP_LAYER: 'osm'
   };
+
+  try {
+    const savedConfig = localStorage.getItem('bds_pro_custom_config');
+    if (savedConfig) {
+      const parsed = JSON.parse(savedConfig);
+      Object.assign(defaults, parsed);
+    }
+    const savedLogo = localStorage.getItem('bds_pro_company_logo');
+    if (savedLogo) defaults.COMPANY_LOGO = savedLogo;
+  } catch (e) {}
 
   const stored = (STORE.CaiDat && STORE.CaiDat.length > 0) ? STORE.CaiDat : [];
   stored.forEach(row => {
@@ -3551,6 +4090,7 @@ function renderCaiDat() {
     const el = document.getElementById('cfg-' + key);
     if (el) el.value = val;
   });
+
   if (defaults.COMPANY_LOGO) applyCompanyLogo(defaults.COMPANY_LOGO);
   if (defaults.COMPANY_NAME) {
     const el1 = document.getElementById('app-company-name-text');
@@ -3567,25 +4107,36 @@ function renderCaiDat() {
     const el2 = document.getElementById('login-company-slogan');
     if (el2) el2.innerText = defaults.SLOGAN;
   }
+
+  updateBankAndQRPreview();
 }
 
 function saveAllCompanySettings() {
   const keys = [
     'COMPANY_NAME', 'COMPANY_LOGO', 'AUTHOR', 'HOTLINE', 'ADDRESS', 'TAX_ID', 'EMAIL', 'SLOGAN',
+    'BANK_CODE', 'BANK_STK', 'BANK_ACCOUNT_NAME', 'BANK_MEMO', 'BANK_TEST_AMOUNT', 'BANK_ACCOUNT',
     'HH_RATE_SALES', 'HH_RATE_LEAD', 'HH_RATE_DIR', 'DEPOSIT_MIN', 'HOLD_DAYS',
-    'BANK_ACCOUNT', 'MAP_REGION_PRESET', 'MAP_LAT', 'MAP_LNG', 'MAP_ZOOM', 'MAP_LAYER'
+    'MAP_REGION_PRESET', 'MAP_LAT', 'MAP_LNG', 'MAP_ZOOM', 'MAP_LAYER'
   ];
 
   const newConfigList = [];
+  const cfgObj = {};
   keys.forEach(k => {
     const el = document.getElementById('cfg-' + k);
     const v = el ? el.value.trim() : '';
     newConfigList.push({ Key: k, Value: v, MoTa: 'Cấu hình doanh nghiệp BĐS PRO' });
+    cfgObj[k] = v;
   });
 
   STORE.CaiDat = newConfigList;
 
-  // Cập nhật ngay các tiêu đề nhận diện thương hiệu trên giao diện (Đã sửa lỗi tràn chữ & không ghi đè tiêu đề Header)
+  try {
+    localStorage.setItem('bds_pro_custom_config', JSON.stringify(cfgObj));
+    if (cfgObj.COMPANY_LOGO) {
+      localStorage.setItem('bds_pro_company_logo', cfgObj.COMPANY_LOGO);
+    }
+  } catch (e) {}
+
   const compName = document.getElementById('cfg-COMPANY_NAME')?.value || 'BĐS PRO';
   const logoVal = document.getElementById('cfg-COMPANY_LOGO')?.value || '';
   applyCompanyLogo(logoVal);
@@ -3601,15 +4152,17 @@ function saveAllCompanySettings() {
     sloganEl.title = sloganVal;
   }
 
+  updateBankAndQRPreview();
+
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     google.script.run
       .withSuccessHandler(res => {
-        alert("✅ Đã lưu toàn bộ thông số doanh nghiệp vào Google Sheet thành công!");
+        showToast("Đã lưu toàn bộ thông số doanh nghiệp vào Google Sheet thành công!", "success");
       })
-      .withFailureHandler(err => alert("Lỗi lưu cấu hình: " + err))
+      .withFailureHandler(err => showToast("Lỗi lưu cấu hình: " + err, "error"))
       .apiSaveRecord('CaiDat', { Key: 'COMPANY_NAME', Value: document.getElementById('cfg-COMPANY_NAME')?.value || '' }, 'Key');
   } else {
-    alert("✅ Đã lưu cấu hình doanh nghiệp thành công! (Mẫu xem trước thương mại)");
+    showToast("Đã lưu cấu hình doanh nghiệp & VietQR thành công!", "success");
   }
 }
 
@@ -3770,7 +4323,7 @@ function submitCrudModal() {
       .apiSaveRecord(sheetName, recordData, cfg.idCol);
   }
 
-  alert("✅ Đã lưu " + cfg.title + " (" + idVal + ") thành công!");
+  showToast("Đã lưu " + cfg.title + " (" + idVal + ") thành công!", "success");
 }
 
 function confirmDelete(sheetName, idCol, idVal) {

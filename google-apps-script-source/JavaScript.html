@@ -1,4 +1,40 @@
 <script>
+tailwind.config = {
+      darkMode: 'class'
+    };
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('bds_pro_theme');
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch(e) {}
+    })();
+
+(function() {
+      function dismissLoading() {
+        var s = document.getElementById('loading-screen');
+        if (s) {
+          s.style.opacity = '0';
+          setTimeout(function() { if (s && s.parentNode) s.parentNode.removeChild(s); }, 250);
+        }
+      }
+      setTimeout(dismissLoading, 300);
+      window.addEventListener('load', dismissLoading);
+
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('btn-user-profile');
+  const menu = document.getElementById('user-dropdown-menu');
+  if (menu && !menu.classList.contains('hidden')) {
+    if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  }
+});
+
+    })();
 
 // ================= HỆ THỐNG ĐĂNG NHẬP, PHÂN QUYỀN (RBAC) & QUẢN LÝ LOGO =================
 
@@ -43,6 +79,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-amber-100 text-amber-800',
     avatarBg: 'bg-amber-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'],
+    canEdit: true,
     canEditConfig: true,
     canDelete: true,
     canManageUsers: true
@@ -52,8 +89,9 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-purple-100 text-purple-800',
     avatarBg: 'bg-purple-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'nhanvien', 'hoahong', 'baocao'],
+    canEdit: true,
     canEditConfig: false,
-    canDelete: false,
+    canDelete: true,
     canManageUsers: false
   },
   sale: {
@@ -61,6 +99,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-emerald-100 text-emerald-800',
     avatarBg: 'bg-emerald-600',
     allowedTabs: ['lodat', 'map', 'khachhang', 'giaodich', 'hoahong'],
+    canEdit: true,
     canEditConfig: false,
     canDelete: false,
     canManageUsers: false
@@ -70,6 +109,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-blue-100 text-blue-800',
     avatarBg: 'bg-blue-600',
     allowedTabs: ['dashboard', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'hoahong', 'baocao'],
+    canEdit: true,
     canEditConfig: false,
     canDelete: false,
     canManageUsers: false
@@ -207,17 +247,20 @@ function applyUserPermissions(user) {
 
 function applyPermissionRestrictions(perm) {
   if (!perm) return;
+  const canEdit = perm.canEdit !== false;
+  const canDelete = perm.canDelete === true;
+
   // Ẩn/hiện nút xóa
   document.querySelectorAll('.btn-action-delete').forEach(btn => {
-    btn.style.display = perm.canDelete ? '' : 'none';
+    btn.style.display = canDelete ? '' : 'none';
   });
   // Ẩn/hiện nút sửa
   document.querySelectorAll('.btn-action-edit').forEach(btn => {
-    btn.style.display = perm.canEdit ? '' : 'none';
+    btn.style.display = canEdit ? '' : 'none';
   });
-  // Ẩn/hiện nút thêm mới dữ liệu
+  // Ẩn/hiện nút thêm mới dữ liệu (Dự Án, Khách Hàng, Lô Đất, Giao Dịch...)
   document.querySelectorAll('button[onclick*="openAddModal"]').forEach(btn => {
-    btn.style.display = perm.canEdit ? '' : 'none';
+    btn.style.display = canEdit ? '' : 'none';
   });
   // Ẩn/hiện nút cấp quyền nhân viên
   const btnRbac = document.querySelector('button[onclick*="openEmployeeRbacModal()"]');
@@ -1562,6 +1605,10 @@ function switchTab(tabId) {
   const pageTitle = document.getElementById('page-title');
   if (pageTitle) pageTitle.innerText = titles[tabId] || 'Hệ Thống BĐS';
 
+  if (tabId === 'caidat') {
+    try { renderCaiDat(); } catch(e){}
+  }
+
   if (tabId === 'map') {
     setTimeout(() => {
       initMap();
@@ -1682,6 +1729,7 @@ function renderTableLoDat() {
         <td class="text-slate-600">${item.Huong || ''}</td>
         <td class="text-center"><span class="stat-badge" style="background:${cfg.bgBadge}; color:${cfg.textBadge};">${st.toUpperCase()}</span></td>
         <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openDepositReceiptModal('${item.MaLo}')" class="p-1 px-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="In phiếu cọc & VietQR"><i class="fa fa-qrcode"></i></button>
           <button onclick="viewLotOnMap('${item.MaLo}')" class="p-1 px-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="Định vị lô trên bản đồ"><i class="fa fa-map-location-dot"></i></button>
           <button onclick="openEditModal('LoDat', '${item.MaLo}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
           <button onclick="confirmDelete('LoDat', 'MaLo', '${item.MaLo}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
@@ -1756,6 +1804,7 @@ function renderTableGiaoDich() {
         <td class="text-slate-600">${item.PTThanhToan}</td>
         <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
         <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openDepositReceiptModal('${item.MaLo}')" class="p-1 px-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="In phiếu cọc & VietQR"><i class="fa fa-file-invoice-dollar"></i></button>
           <button onclick="openEditModal('GiaoDich', '${item.MaGD}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
           <button onclick="confirmDelete('GiaoDich', 'MaGD', '${item.MaGD}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
         </td>
@@ -2109,8 +2158,230 @@ function renderTableHoaHong() {
   }).join('');
 }
 
+// ================= DANH MỤC NGÂN HÀNG VIỆT NAM & TỰ TẠO MÃ VIETQR NAPAS 247 =================
+const VIETNAM_BANKS = [
+  { code: 'MB', bin: '970422', shortName: 'MBBank', name: 'Ngân hàng Quân Đội' },
+  { code: 'VCB', bin: '970436', shortName: 'Vietcombank', name: 'Ngân hàng Ngoại Thương VN' },
+  { code: 'TCB', bin: '970407', shortName: 'Techcombank', name: 'Ngân hàng Kỹ Thương VN' },
+  { code: 'ICB', bin: '970415', shortName: 'VietinBank', name: 'Ngân hàng Công Thương VN' },
+  { code: 'BIDV', bin: '970418', shortName: 'BIDV', name: 'Ngân hàng Đầu tư & Phát triển VN' },
+  { code: 'ACB', bin: '970416', shortName: 'ACB', name: 'Ngân hàng Á Châu' },
+  { code: 'VPB', bin: '970432', shortName: 'VPBank', name: 'Ngân hàng VN Thịnh Vượng' },
+  { code: 'TPB', bin: '970423', shortName: 'TPBank', name: 'Ngân hàng Tiên Phong' },
+  { code: 'STB', bin: '970403', shortName: 'Sacombank', name: 'Ngân hàng Sài Gòn Thương Tín' },
+  { code: 'VBA', bin: '970405', shortName: 'Agribank', name: 'Ngân hàng Nông nghiệp & PTNT VN' },
+  { code: 'HDB', bin: '970437', shortName: 'HDBank', name: 'Ngân hàng Phát triển TP.HCM' },
+  { code: 'VIB', bin: '970441', shortName: 'VIB', name: 'Ngân hàng Quốc tế VN' },
+  { code: 'SHB', bin: '970443', shortName: 'SHB', name: 'Ngân hàng Sài Gòn - Hà Nội' },
+  { code: 'OCB', bin: '970448', shortName: 'OCB', name: 'Ngân hàng Phương Đông' },
+  { code: 'MSB', bin: '970426', shortName: 'MSB', name: 'Ngân hàng Hàng Hải VN' },
+  { code: 'LPB', bin: '970449', shortName: 'LPBank', name: 'Ngân hàng Lộc Phát Việt Nam' },
+  { code: 'SEAB', bin: '970440', shortName: 'SeABank', name: 'Ngân hàng Đông Nam Á' },
+  { code: 'NAB', bin: '970428', shortName: 'Nam A Bank', name: 'Ngân hàng Nam Á' },
+  { code: 'BAB', bin: '970409', shortName: 'Bac A Bank', name: 'Ngân hàng Bắc Á' },
+  { code: 'BVB', bin: '970438', shortName: 'BaoVietBank', name: 'Ngân hàng Bảo Việt' },
+  { code: 'KLB', bin: '970452', shortName: 'Kienlongbank', name: 'Ngân hàng Kiên Long' },
+  { code: 'VAB', bin: '970427', shortName: 'VietABank', name: 'Ngân hàng Việt Á' },
+  { code: 'NCB', bin: '970419', shortName: 'NCB', name: 'Ngân hàng Quốc Dân' },
+  { code: 'BVBank', bin: '970454', shortName: 'BVBank', name: 'Ngân hàng Bản Việt' },
+  { code: 'SGICB', bin: '970400', shortName: 'Saigonbank', name: 'Ngân hàng Sài Gòn Công Thương' },
+  { code: 'TIMO', bin: '963388', shortName: 'Timo', name: 'Ngân hàng số Timo by BVBank' },
+  { code: 'CAKE', bin: '546034', shortName: 'Cake by VPBank', name: 'Ngân hàng số Cake by VPBank' }
+];
+
+function initBankSelectOptions() {
+  const sel = document.getElementById('cfg-BANK_CODE');
+  if (!sel) return;
+  if (sel.options.length === 0) {
+    sel.innerHTML = VIETNAM_BANKS.map(b => 
+      `<option value="${b.code}">${b.shortName} - ${b.name} (${b.code})</option>`
+    ).join('');
+  }
+}
+
+function getVietQrImageUrl(bankCode, stk, accountName, amount, memo) {
+  const bCode = bankCode || 'MB';
+  const acc = (stk || '0393990638').replace(/\s+/g, '');
+  const amt = Number(amount) || 0;
+  const addInfo = encodeURIComponent((memo || 'DAT COC BDS PRO').trim());
+  const accName = encodeURIComponent((accountName || 'NGUYEN CONG DINH').trim().toUpperCase());
+  return `https://img.vietqr.io/image/${bCode}-${acc}-compact2.png?amount=${amt}&addInfo=${addInfo}&accountName=${accName}`;
+}
+
+function updateBankAndQRPreview() {
+  initBankSelectOptions();
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const accountName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const memo = (document.getElementById('cfg-BANK_MEMO')?.value || 'DAT COC BDS PRO').trim();
+  const testAmount = document.getElementById('cfg-BANK_TEST_AMOUNT')?.value || '50000000';
+
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+  const qrUrl = getVietQrImageUrl(bankCode, stk, accountName, testAmount, memo);
+
+  const qrImg = document.getElementById('cfg-vietqr-preview-img');
+  if (qrImg) qrImg.src = qrUrl;
+
+  const bNameEl = document.getElementById('cfg-vietqr-bank-name');
+  if (bNameEl) bNameEl.innerText = `${bankObj.shortName} - ${bankObj.name}`;
+
+  const stkEl = document.getElementById('cfg-vietqr-stk');
+  if (stkEl) stkEl.innerText = stk;
+
+  const nameEl = document.getElementById('cfg-vietqr-accname');
+  if (nameEl) nameEl.innerText = accountName;
+
+  const combinedAccount = `${bankObj.shortName} - STK: ${stk} - ${accountName}`;
+  const hiddenAcc = document.getElementById('cfg-BANK_ACCOUNT');
+  if (hiddenAcc) hiddenAcc.value = combinedAccount;
+}
+
+function openLargeQRModal() {
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const accountName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const memo = (document.getElementById('cfg-BANK_MEMO')?.value || 'DAT COC BDS PRO').trim();
+  const testAmount = document.getElementById('cfg-BANK_TEST_AMOUNT')?.value || '50000000';
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+
+  const qrUrl = getVietQrImageUrl(bankCode, stk, accountName, testAmount, memo);
+
+  const mImg = document.getElementById('modal-large-qr-img');
+  if (mImg) mImg.src = qrUrl;
+  const mBank = document.getElementById('modal-large-qr-bank-name');
+  if (mBank) mBank.innerText = `${bankObj.shortName} - ${bankObj.name}`;
+  const mInfo = document.getElementById('modal-large-qr-account-info');
+  if (mInfo) mInfo.innerText = `STK: ${stk}`;
+  const mName = document.getElementById('modal-large-qr-account-name');
+  if (mName) mName.innerText = accountName;
+
+  const modal = document.getElementById('large-qr-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeLargeQRModal() {
+  const modal = document.getElementById('large-qr-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function downloadBankQR() {
+  const qrImg = document.getElementById('cfg-vietqr-preview-img');
+  if (!qrImg || !qrImg.src) return;
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+
+  const a = document.createElement('a');
+  a.href = qrImg.src;
+  a.download = `VietQR_${bankCode}_${stk}.png`;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('Đang mở/tải ảnh mã VietQR...', 'success');
+}
+
+function copyBankAccount() {
+  const stk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(stk).then(() => {
+      showToast(`Đã sao chép số tài khoản: ${stk}`, 'success');
+    }).catch(() => {
+      showToast(`Số tài khoản: ${stk}`, 'info');
+    });
+  } else {
+    showToast(`Số tài khoản: ${stk}`, 'info');
+  }
+}
+
+// --- XEM & IN PHIẾU XÁC NHẬN ĐẶT CỌC KÈM VIETQR ---
+function openDepositReceiptModal(maLo) {
+  const lot = (STORE.LoDat || []).find(l => l.MaLo === maLo) || (STORE.LoDat && STORE.LoDat[0]) || {
+    MaLo: maLo || 'L0001', TenLo: 'Lô A1', MaDuAn: 'DA001', DienTich: 101, GiaM2: 26091780, TongGia: '2.6 tỷ'
+  };
+
+  const compName = document.getElementById('cfg-COMPANY_NAME')?.value || 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT';
+  const compAuthor = document.getElementById('cfg-AUTHOR')?.value || 'Nguyễn Công Dinh';
+  const compHotline = document.getElementById('cfg-HOTLINE')?.value || '0393990638';
+  const compAddress = document.getElementById('cfg-ADDRESS')?.value || 'Mỹ Phước - Cần Thơ';
+  const compTax = document.getElementById('cfg-TAX_ID')?.value || '1801689999';
+  const compSlogan = document.getElementById('cfg-SLOGAN')?.value || 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa';
+  const compLogo = document.getElementById('cfg-COMPANY_LOGO')?.value || 'https://luong-viet-360.vercel.app/logo-dinhcong.webp';
+
+  const bankCode = document.getElementById('cfg-BANK_CODE')?.value || 'MB';
+  const bankStk = (document.getElementById('cfg-BANK_STK')?.value || '0393990638').trim();
+  const bankAccName = (document.getElementById('cfg-BANK_ACCOUNT_NAME')?.value || 'NGUYEN CONG DINH').trim().toUpperCase();
+  const depositMin = Number(document.getElementById('cfg-DEPOSIT_MIN')?.value || 50000000);
+  const holdDays = document.getElementById('cfg-HOLD_DAYS')?.value || '7';
+
+  const logoEl = document.getElementById('receipt-company-logo');
+  if (logoEl) logoEl.src = compLogo;
+  const nameEl = document.getElementById('receipt-company-name');
+  if (nameEl) nameEl.innerText = compName;
+  const sloganEl = document.getElementById('receipt-company-slogan');
+  if (sloganEl) sloganEl.innerText = compSlogan;
+  const addrEl = document.getElementById('receipt-company-address');
+  if (addrEl) addrEl.innerText = 'Địa chỉ: ' + compAddress;
+  const hotEl = document.getElementById('receipt-company-hotline');
+  if (hotEl) hotEl.innerText = `Hotline: ${compHotline} | MST: ${compTax}`;
+
+  const repEl = document.getElementById('receipt-rep-name');
+  if (repEl) repEl.innerText = compAuthor;
+  const repPhEl = document.getElementById('receipt-rep-phone');
+  if (repPhEl) repPhEl.innerText = compHotline;
+  const signRep = document.getElementById('receipt-sign-rep');
+  if (signRep) signRep.innerText = compAuthor;
+
+  const codeEl = document.getElementById('receipt-lot-code');
+  if (codeEl) codeEl.innerText = lot.MaLo || '';
+  const lotNameEl = document.getElementById('receipt-lot-name');
+  if (lotNameEl) lotNameEl.innerText = lot.TenLo || '';
+  const lotProjEl = document.getElementById('receipt-lot-project');
+  if (lotProjEl) lotProjEl.innerText = lot.MaDuAn || 'Dự án phân lô';
+  const lotAreaEl = document.getElementById('receipt-lot-area');
+  if (lotAreaEl) lotAreaEl.innerText = (lot.DienTich || 100) + ' m²';
+  const lotPriceEl = document.getElementById('receipt-lot-unitprice');
+  if (lotPriceEl) lotPriceEl.innerText = Number(lot.GiaM2 || 0).toLocaleString('vi-VN') + ' đ';
+  const lotTotalEl = document.getElementById('receipt-lot-totalprice');
+  const formattedTotal = typeof lot.TongGia === 'string' ? lot.TongGia : (Number(lot.TongGia || (lot.DienTich * lot.GiaM2)) / 1e9).toFixed(1) + ' tỷ';
+  if (lotTotalEl) lotTotalEl.innerText = formattedTotal;
+
+  const depAmtEl = document.getElementById('receipt-deposit-amount');
+  if (depAmtEl) depAmtEl.innerText = Number(depositMin).toLocaleString('vi-VN') + ' VNĐ';
+  const holdEl = document.getElementById('receipt-hold-days');
+  if (holdEl) holdEl.innerText = holdDays + ' ngày';
+
+  const bankInfoEl = document.getElementById('receipt-bank-info');
+  const bankObj = VIETNAM_BANKS.find(b => b.code === bankCode) || VIETNAM_BANKS[0];
+  if (bankInfoEl) bankInfoEl.innerText = `${bankObj.shortName} - STK: ${bankStk} (${bankAccName})`;
+
+  const memo = `COC LO ${lot.TenLo || lot.MaLo} ${lot.MaLo}`;
+  const qrUrl = getVietQrImageUrl(bankCode, bankStk, bankAccName, depositMin, memo);
+  const receiptQr = document.getElementById('receipt-vietqr-img');
+  if (receiptQr) receiptQr.src = qrUrl;
+
+  const receiptDate = document.getElementById('receipt-date-text');
+  const today = new Date();
+  if (receiptDate) receiptDate.innerText = `Ngày: ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+  const voucherNo = document.getElementById('receipt-voucher-no');
+  if (voucherNo) voucherNo.innerText = `PC-${lot.MaLo || '001'}-${today.getFullYear()}`;
+
+  const modal = document.getElementById('deposit-receipt-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeDepositReceiptModal() {
+  const modal = document.getElementById('deposit-receipt-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function printDepositReceipt() {
+  window.print();
+}
+
 // --- TRUNG TÂM CÀI ĐẶT DOANH NGHIỆP THƯƠNG MẠI ---
 function renderCaiDat() {
+  initBankSelectOptions();
+
   const defaults = {
     COMPANY_NAME: 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT',
     COMPANY_LOGO: 'https://luong-viet-360.vercel.app/logo-dinhcong.webp',
@@ -2120,19 +2391,33 @@ function renderCaiDat() {
     TAX_ID: '1801689999',
     EMAIL: 'lienhe@bdsangiaphat.vn',
     SLOGAN: 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa',
+    BANK_CODE: 'MB',
+    BANK_STK: '0393990638',
+    BANK_ACCOUNT_NAME: 'NGUYEN CONG DINH',
+    BANK_MEMO: 'DAT COC BDS PRO',
+    BANK_TEST_AMOUNT: '50000000',
+    BANK_ACCOUNT: 'MB Bank - STK: 0393990638 - NGUYEN CONG DINH',
     HH_RATE_SALES: '3.0',
     HH_RATE_LEAD: '0.8',
     HH_RATE_DIR: '0.5',
     DEPOSIT_MIN: '50000000',
     HOLD_DAYS: '7',
-    BANK_ACCOUNT: 'MB Bank - STK: 0393990638 - Nguyễn Công Dinh',
     MAP_REGION_PRESET: 'mientay_all',
     MAP_LAT: '10.000000',
     MAP_LNG: '105.700000',
     MAP_ZOOM: '9',
-    MAP_LAYER: 'osm',
-    
+    MAP_LAYER: 'osm'
   };
+
+  try {
+    const savedConfig = localStorage.getItem('bds_pro_custom_config');
+    if (savedConfig) {
+      const parsed = JSON.parse(savedConfig);
+      Object.assign(defaults, parsed);
+    }
+    const savedLogo = localStorage.getItem('bds_pro_company_logo');
+    if (savedLogo) defaults.COMPANY_LOGO = savedLogo;
+  } catch (e) {}
 
   const stored = (STORE.CaiDat && STORE.CaiDat.length > 0) ? STORE.CaiDat : [];
   stored.forEach(row => {
@@ -2145,6 +2430,7 @@ function renderCaiDat() {
     const el = document.getElementById('cfg-' + key);
     if (el) el.value = val;
   });
+
   if (defaults.COMPANY_LOGO) applyCompanyLogo(defaults.COMPANY_LOGO);
   if (defaults.COMPANY_NAME) {
     const el1 = document.getElementById('app-company-name-text');
@@ -2161,25 +2447,36 @@ function renderCaiDat() {
     const el2 = document.getElementById('login-company-slogan');
     if (el2) el2.innerText = defaults.SLOGAN;
   }
+
+  updateBankAndQRPreview();
 }
 
 function saveAllCompanySettings() {
   const keys = [
     'COMPANY_NAME', 'COMPANY_LOGO', 'AUTHOR', 'HOTLINE', 'ADDRESS', 'TAX_ID', 'EMAIL', 'SLOGAN',
+    'BANK_CODE', 'BANK_STK', 'BANK_ACCOUNT_NAME', 'BANK_MEMO', 'BANK_TEST_AMOUNT', 'BANK_ACCOUNT',
     'HH_RATE_SALES', 'HH_RATE_LEAD', 'HH_RATE_DIR', 'DEPOSIT_MIN', 'HOLD_DAYS',
-    'BANK_ACCOUNT', 'MAP_REGION_PRESET', 'MAP_LAT', 'MAP_LNG', 'MAP_ZOOM', 'MAP_LAYER'
+    'MAP_REGION_PRESET', 'MAP_LAT', 'MAP_LNG', 'MAP_ZOOM', 'MAP_LAYER'
   ];
 
   const newConfigList = [];
+  const cfgObj = {};
   keys.forEach(k => {
     const el = document.getElementById('cfg-' + k);
     const v = el ? el.value.trim() : '';
     newConfigList.push({ Key: k, Value: v, MoTa: 'Cấu hình doanh nghiệp BĐS PRO' });
+    cfgObj[k] = v;
   });
 
   STORE.CaiDat = newConfigList;
 
-  // Cập nhật ngay các tiêu đề nhận diện thương hiệu trên giao diện (Đã sửa lỗi tràn chữ & không ghi đè tiêu đề Header)
+  try {
+    localStorage.setItem('bds_pro_custom_config', JSON.stringify(cfgObj));
+    if (cfgObj.COMPANY_LOGO) {
+      localStorage.setItem('bds_pro_company_logo', cfgObj.COMPANY_LOGO);
+    }
+  } catch (e) {}
+
   const compName = document.getElementById('cfg-COMPANY_NAME')?.value || 'BĐS PRO';
   const logoVal = document.getElementById('cfg-COMPANY_LOGO')?.value || '';
   applyCompanyLogo(logoVal);
@@ -2195,15 +2492,17 @@ function saveAllCompanySettings() {
     sloganEl.title = sloganVal;
   }
 
+  updateBankAndQRPreview();
+
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     google.script.run
       .withSuccessHandler(res => {
-        alert("✅ Đã lưu toàn bộ thông số doanh nghiệp vào Google Sheet thành công!");
+        showToast("Đã lưu toàn bộ thông số doanh nghiệp vào Google Sheet thành công!", "success");
       })
-      .withFailureHandler(err => alert("Lỗi lưu cấu hình: " + err))
+      .withFailureHandler(err => showToast("Lỗi lưu cấu hình: " + err, "error"))
       .apiSaveRecord('CaiDat', { Key: 'COMPANY_NAME', Value: document.getElementById('cfg-COMPANY_NAME')?.value || '' }, 'Key');
   } else {
-    alert("✅ Đã lưu cấu hình doanh nghiệp thành công! (Mẫu xem trước thương mại)");
+    showToast("Đã lưu cấu hình doanh nghiệp & VietQR thành công!", "success");
   }
 }
 
@@ -2364,7 +2663,7 @@ function submitCrudModal() {
       .apiSaveRecord(sheetName, recordData, cfg.idCol);
   }
 
-  alert("✅ Đã lưu " + cfg.title + " (" + idVal + ") thành công!");
+  showToast("Đã lưu " + cfg.title + " (" + idVal + ") thành công!", "success");
 }
 
 function confirmDelete(sheetName, idCol, idVal) {
@@ -3436,6 +3735,5 @@ function applyTheme(theme, showToast) {
     }
   }
 }
-
 
 </script>
