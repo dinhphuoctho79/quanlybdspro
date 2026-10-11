@@ -215,7 +215,64 @@
     }
   }
 
-  </style>
+  
+    /* HIỆU ỨNG VIỀN LED 3D CHẠY LIÊN TỤC (RUNNING NEON BEAM / 3D CYBER BORDER) */
+    @keyframes ledBorderRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .led-3d-running-border {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      padding: 2px;
+      background: transparent;
+    }
+
+    .led-3d-running-border::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(
+        transparent,
+        rgba(16, 185, 129, 0.2),
+        #10b981 25%,
+        #06b6d4 50%,
+        #f59e0b 75%,
+        #ec4899 90%,
+        transparent 100%
+      );
+      animation: ledBorderRotate 4.5s linear infinite;
+      will-change: transform;
+    }
+
+    .led-3d-running-border-inner {
+      position: relative;
+      z-index: 1;
+      border-radius: calc(1rem - 2px);
+      background: linear-gradient(135deg, #0b1329 0%, #0f172a 50%, #062419 100%);
+    }
+
+    /* Hiệu ứng nhấp nháy đèn LED nhịp tim */
+    @keyframes ledDotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 4px #10b981); }
+      50% { opacity: 0.3; transform: scale(0.8); filter: drop-shadow(0 0 1px #10b981); }
+    }
+    .led-pulse-dot {
+      animation: ledDotPulse 1.2s infinite ease-in-out;
+    }
+
+    /* Viền LED 3D chạy cho thẻ lịch hôm nay */
+    .cal-today-glow {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5), inset 0 0 10px rgba(16, 185, 129, 0.3);
+      border: 1.5px solid #f59e0b !important;
+    }
+
+</style>
 </head>
 <body class="bg-[#f8fafc] flex h-screen overflow-hidden font-sans text-slate-800">
 
@@ -432,34 +489,70 @@ document.addEventListener('click', function(e) {
           <span id="dashboard-filter-label" class="text-slate-400 text-[11px] font-medium hidden sm:inline">Tất cả thời gian</span>
         </div>
 
-        <!-- THANH ĐIỀU HÀNH TRUNG TÂM LED 3D (CYBER COMMAND BAR) -->
-        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#0b1329] via-[#0f172a] to-[#062419] border border-emerald-500/30 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.3)] text-white flex items-center justify-between flex-wrap gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 text-lg shadow-[0_0_15px_rgba(16,185,129,0.5)]">
-              <i class="fa fa-gauge-high animate-pulse"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="font-black text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
-                  <span>TRUNG TÂM ĐIỀU HÀNH TRỰC QUAN LED 3D</span>
-                </h3>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> LIVE 3D
-                </span>
+        <!-- THANH ĐIỀU HÀNH TRUNG TÂM LED 3D (CYBER COMMAND BAR - VIỀN LED 3D CHẠY LIÊN TỤC) -->
+        <div class="led-3d-running-border shadow-[0_10px_35px_-5px_rgba(16,185,129,0.35)]">
+          <div class="led-3d-running-border-inner p-3.5 sm:p-4 text-white flex items-center justify-between flex-wrap gap-4">
+            
+            <!-- CỘT TRÁI: TIÊU ĐỀ & TRẠNG THÁI HỆ THỐNG -->
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-300 text-xl shadow-[0_0_20px_rgba(16,185,129,0.6)] flex-shrink-0 animate-pulse">
+                <i class="fa fa-gauge-high"></i>
               </div>
-              <p class="text-[11px] text-slate-400">Giám sát tổng thể doanh thu, tồn kho giỏ hàng và biến động chuyển khoản Napas 247</p>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-black text-sm sm:text-base tracking-wide text-white uppercase flex items-center gap-1.5">
+                    <span>TRUNG TÂM ĐIỀU HÀNH LED 3D</span>
+                  </h3>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> LIVE 3D
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-300">Giám sát giỏ hàng, doanh thu thực tế và chu kỳ lịch phong thủy BĐS</p>
+              </div>
             </div>
-          </div>
 
-          <!-- ĐỒNG HỒ ĐIỆN TỬ LED THỜI GIAN THỰC -->
-          <div class="flex items-center gap-2">
-            <div class="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/40 shadow-inner flex items-center gap-2 font-mono text-emerald-400 text-xs font-black">
-              <i class="fa fa-clock text-amber-400"></i>
-              <span id="led-live-clock">--:--:--</span>
+            <!-- CỘT PHẢI: CỤM ĐỒNG HỒ SỐ LED 3D + DƯƠNG LỊCH + ÂM LỊCH VN + NÚT LỊCH THÁNG -->
+            <div class="flex items-center gap-2.5 flex-wrap">
+              
+              <!-- BOX ĐỒNG HỒ SỐ & DƯƠNG/ÂM LỊCH -->
+              <div class="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-emerald-500/50 shadow-[inset_0_2px_10px_rgba(0,0,0,0.6)] flex items-center gap-3">
+                
+                <!-- GIỜ SỐ ĐIỆN TỬ LED PHÁT SÁNG NỔI KHỐI -->
+                <div class="flex items-center gap-1 font-mono text-emerald-400 font-black tracking-widest text-sm sm:text-base drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]">
+                  <i class="fa fa-clock text-amber-400 text-xs mr-0.5"></i>
+                  <span id="led-live-clock">--:--:--</span>
+                </div>
+
+                <div class="h-6 w-px bg-slate-700"></div>
+
+                <!-- DƯƠNG LỊCH & ÂM LỊCH VIỆT NAM THỜI GIAN THỰC -->
+                <div class="text-[11px] leading-tight flex flex-col justify-center">
+                  <div class="font-bold text-slate-200 flex items-center gap-1">
+                    <span id="led-solar-date">Chủ Nhật, --/--/----</span>
+                  </div>
+                  <div class="text-[10px] text-amber-300 font-semibold flex items-center gap-1 mt-0.5">
+                    <span class="text-amber-400">🌙</span>
+                    <span id="led-lunar-date">Âm lịch: Đang nạp...</span>
+                    <span id="led-lunar-badge" class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">HOÀNG ĐẠO</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- NÚT MỞ LỊCH THÁNG ÂM - DƯƠNG (XEM TOÀN BỘ THÁNG & CHỌN NGÀY CỌC) -->
+              <button onclick="openLunarCalendarModal()" class="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                <i class="fa fa-calendar-days text-amber-400"></i>
+                <span class="hidden sm:inline">Lịch Tháng Âm - Dương</span>
+                <span class="sm:hidden">Lịch</span>
+              </button>
+
+              <!-- NÚT LÀM MỚI DỮ LIỆU -->
+              <button onclick="refreshDashboardData()" class="px-3 py-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs" title="Làm mới bảng điều khiển">
+                <i class="fa fa-arrows-rotate"></i>
+              </button>
+
             </div>
-            <button onclick="refreshDashboardData()" class="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
-              <i class="fa fa-arrows-rotate"></i> Làm Mới
-            </button>
+
           </div>
         </div>
 
@@ -1499,7 +1592,116 @@ document.addEventListener('click', function(e) {
   </div>
 
   
-      <!-- ================= MODAL GHI NHẬN CHUYỂN KHOẢN MỚI ================= -->
+      
+  <!-- ================= MODAL LỊCH THÁNG ÂM - DƯƠNG BĐS PRO ================= -->
+  <div id="lunar-calendar-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center z-[100000] hidden p-3 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden flex flex-col animate-slide-up max-h-[92vh]">
+      
+      <!-- MODAL HEADER -->
+      <div class="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 text-lg shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+            <i class="fa fa-calendar-days"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
+              <span>LỊCH VẠN NIÊN ÂM - DƯƠNG BĐS PRO</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900">Phong Thủy Chốt Cọc</span>
+            </h3>
+            <p class="text-[11px] text-emerald-200">Tra cứu ngày giờ Hoàng Đạo, chọn ngày đặt cọc, ký công chứng & động thổ</p>
+          </div>
+        </div>
+        <button onclick="closeLunarCalendarModal()" class="text-white/80 hover:text-white p-1 rounded-full cursor-pointer transition">
+          <i class="fa fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <!-- MODAL CONTROLS: CHUYỂN THÁNG / NĂM -->
+      <div class="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div class="flex items-center gap-2">
+          <button onclick="changeLunarCalMonth(-1)" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 font-bold text-slate-700 transition cursor-pointer">
+            <i class="fa fa-chevron-left"></i> Tháng Trước
+          </button>
+          <button onclick="changeLunarCalMonth(1)" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 font-bold text-slate-700 transition cursor-pointer">
+            Tháng Sau <i class="fa fa-chevron-right"></i>
+          </button>
+          <button onclick="jumpLunarCalToday()" class="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 font-bold text-white transition cursor-pointer">
+            <i class="fa fa-calendar-check"></i> Hôm Nay
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <h4 id="lunar-cal-title-header" class="text-sm font-black text-slate-800 uppercase tracking-wide">
+            THÁNG -- NĂM ----
+          </h4>
+        </div>
+      </div>
+
+      <!-- BẢNG LƯỚI LỊCH THÁNG -->
+      <div class="p-4 overflow-y-auto flex-1 text-xs">
+        <!-- TIÊU ĐỀ 7 THỨ TRONG TUẦN -->
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-slate-500 mb-2">
+          <div class="p-1.5 rounded bg-slate-100 text-slate-700">Thứ 2</div>
+          <div class="p-1.5 rounded bg-slate-100 text-slate-700">Thứ 3</div>
+          <div class="p-1.5 rounded bg-slate-100 text-slate-700">Thứ 4</div>
+          <div class="p-1.5 rounded bg-slate-100 text-slate-700">Thứ 5</div>
+          <div class="p-1.5 rounded bg-slate-100 text-slate-700">Thứ 6</div>
+          <div class="p-1.5 rounded bg-slate-100 text-emerald-700 font-extrabold">Thứ 7</div>
+          <div class="p-1.5 rounded bg-rose-50 text-rose-600 font-extrabold">Chủ Nhật</div>
+        </div>
+
+        <!-- CÁC Ô NGÀY ĐIỀN ĐỘNG QUA JAVASCRIPT -->
+        <div id="lunar-cal-grid" class="grid grid-cols-7 gap-1.5">
+          <!-- Điền động -->
+        </div>
+
+        <!-- CHI TIẾT NGÀY ĐƯỢC CHỌN (TƯ VẤN PHONG THỦY BĐS) -->
+        <div id="lunar-cal-day-detail" class="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200 space-y-1.5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+              <i class="fa fa-compass text-amber-600"></i> CHI TIẾT NGÀY PHONG THỦY:
+              <span id="cal-detail-solar-text" class="text-emerald-800">--/--/----</span>
+            </span>
+            <span id="cal-detail-badge" class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">HOÀNG ĐẠO (TỐT)</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+            <div class="bg-white/80 p-2 rounded-lg border border-amber-100">
+              <span class="text-slate-400 block text-[10px]">ÂM LỊCH CHUẨN:</span>
+              <strong id="cal-detail-lunar-text" class="text-amber-800 font-black">Ngày -- Tháng --</strong>
+            </div>
+            <div class="bg-white/80 p-2 rounded-lg border border-amber-100">
+              <span class="text-slate-400 block text-[10px]">CAN CHI ĐẦY ĐỦ:</span>
+              <strong id="cal-detail-canchi-text" class="text-slate-800">-- --</strong>
+            </div>
+            <div class="bg-white/80 p-2 rounded-lg border border-amber-100">
+              <span class="text-slate-400 block text-[10px]">TRỰC & HOÀNG ĐẠO:</span>
+              <strong id="cal-detail-truc-text" class="text-emerald-700">-- --</strong>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-slate-600 italic pt-1 flex items-center gap-1">
+            <i class="fa fa-circle-info text-amber-500"></i>
+            <span id="cal-detail-advise">Thích hợp ký phiếu đặt cọc, công chứng chuyển nhượng, động thổ dự án và ký hợp đồng mua bán đất nền.</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <span class="flex items-center gap-3">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Ngày Hoàng Đạo (Tốt)</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Mùng 1 & Rằm</span>
+        </span>
+        <button onclick="closeLunarCalendarModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg cursor-pointer transition">
+          Đóng Lịch
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL GHI NHẬN CHUYỂN KHOẢN MỚI ================= -->
   <div id="transfer-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-[100000] hidden p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden flex flex-col animate-slide-up">
       <div class="bg-[#14532d] text-white p-4 flex items-center justify-between">
@@ -4529,19 +4731,326 @@ function printDepositReceipt() {
 }
 
 
-// ================= HỆ THỐNG ĐỒNG HỒ LED 3D THỜI GIAN THỰC =================
+// ================= HỆ THỐNG THUẬT TOÁN ÂM LỊCH THIÊN VĂN VIỆT NAM (GMT+7) =================
+const VIET_CAN = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
+const VIET_CHI = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
+
+function _vInt(d) { return Math.floor(d); }
+
+function _vJdn(dd, mm, yy) {
+  var a = _vInt((14 - mm) / 12);
+  var y = yy + 4800 - a;
+  var m = mm + 12 * a - 3;
+  var jd = dd + _vInt((153 * m + 2) / 5) + 365 * y + _vInt(y / 4) - _vInt(y / 100) + _vInt(y / 400) - 32045;
+  if (jd < 2299161) jd = dd + _vInt((153 * m + 2) / 5) + 365 * y + _vInt(y / 4) - 32083;
+  return jd;
+}
+
+function _vGetNewMoonDay(k, timeZone) {
+  var T = k / 1236.85;
+  var T2 = T * T;
+  var T3 = T2 * T;
+  var dr = Math.PI / 180;
+  var Jd1 = 2415020.75933 + 29.53058868 * k + 0.0001178 * T2 - 0.0000002 * T3;
+  var M = 359.2242 + 29.10535608 * k - 0.0000333 * T2 - 0.00000347 * T3;
+  var Mpr = 306.0253 + 385.81691806 * k + 0.0107306 * T2 + 0.00001236 * T3;
+  var F = 21.2964 + 390.67050646 * k - 0.0016528 * T2 - 0.00000239 * T3;
+  var C1 = (0.1734 - 0.000393 * T) * Math.sin(M * dr) + 0.0021 * Math.sin(2 * dr * M);
+  C1 = C1 - 0.4068 * Math.sin(Mpr * dr) + 0.0161 * Math.sin(2 * dr * Mpr);
+  C1 = C1 - 0.0004 * Math.sin(3 * dr * Mpr);
+  C1 = C1 + 0.0104 * Math.sin(2 * dr * F) - 0.0051 * Math.sin((M + Mpr) * dr);
+  C1 = C1 - 0.0074 * Math.sin((M - Mpr) * dr) + 0.0004 * Math.sin((2 * F + M) * dr);
+  C1 = C1 - 0.0004 * Math.sin((2 * F - M) * dr) - 0.0006 * Math.sin((2 * F + Mpr) * dr);
+  C1 = C1 + 0.0100 * Math.sin((2 * F - Mpr) * dr) + 0.0005 * Math.sin((2 * Mpr + M) * dr);
+  var Jd = Jd1 + C1;
+  return _vInt(Jd + 0.5 + timeZone / 24);
+}
+
+function _vGetSunLongitude(jdn, timeZone) {
+  var T = (jdn - 2451545.0 + 0.5 - timeZone / 24) / 36525;
+  var T2 = T * T;
+  var dr = Math.PI / 180;
+  var M = 357.52910 + 35999.05030 * T - 0.0001559 * T2 - 0.00000048 * T * T2;
+  var L0 = 280.46645 + 36000.76983 * T + 0.0003032 * T2;
+  var DL = (1.914600 - 0.004817 * T - 0.000014 * T2) * Math.sin(dr * M);
+  DL = DL + (0.019993 - 0.000101 * T) * Math.sin(dr * 2 * M) + 0.000290 * Math.sin(dr * 3 * M);
+  var L = L0 + DL;
+  L = L * dr;
+  L = L - Math.PI * 2 * _vInt(L / (Math.PI * 2));
+  return _vInt(L / Math.PI * 6);
+}
+
+function _vGetLunarMonth11(yy, timeZone) {
+  var k = _vInt((_vJdn(31, 12, yy) - 2415021.076998695) / 29.530588853);
+  var nm = _vGetNewMoonDay(k, timeZone);
+  var sunLong = _vGetSunLongitude(nm, timeZone);
+  if (sunLong >= 9) nm = _vGetNewMoonDay(k - 1, timeZone);
+  return nm;
+}
+
+function _vGetLeapMonthOffset(a11, timeZone) {
+  var k = _vInt((a11 - 2415021.076998695) / 29.530588853 + 0.5);
+  var last = 0;
+  var i = 1;
+  var arc = _vGetSunLongitude(_vGetNewMoonDay(k, timeZone), timeZone);
+  do {
+    last = arc;
+    k++;
+    arc = _vGetSunLongitude(_vGetNewMoonDay(k, timeZone), timeZone);
+    i++;
+  } while (arc != last && i < 14);
+  return i - 1;
+}
+
+function getVietnameseLunarDate(dd, mm, yy) {
+  var timeZone = 7;
+  var dayNumber = _vJdn(dd, mm, yy);
+  var k = _vInt((dayNumber - 2415021.076998695) / 29.530588853);
+  var monthStart = _vGetNewMoonDay(k + 1, timeZone);
+  if (monthStart > dayNumber) monthStart = _vGetNewMoonDay(k, timeZone);
+  
+  var a11 = _vGetLunarMonth11(yy, timeZone);
+  var b11 = a11;
+  var lunarYear = yy;
+  if (a11 >= monthStart) {
+    lunarYear = yy;
+    a11 = _vGetLunarMonth11(yy - 1, timeZone);
+  } else {
+    var a11Next = _vGetLunarMonth11(yy + 1, timeZone);
+    if (a11Next <= monthStart) {
+      lunarYear = yy + 1;
+      a11 = a11Next;
+    }
+  }
+  
+  var lunarDay = dayNumber - monthStart + 1;
+  var diff = _vInt((monthStart - a11) / 29);
+  var lunarLeap = 0;
+  var lunarMonth = diff + 11;
+  if (b11 - a11 > 365) {
+    var leapOff = _vGetLeapMonthOffset(a11, timeZone);
+    if (diff >= leapOff) {
+      lunarMonth = diff + 10;
+      if (diff == leapOff) lunarLeap = 1;
+    }
+  }
+  if (lunarMonth > 12) lunarMonth = lunarMonth - 12;
+  if (lunarMonth >= 11 && diff < 4 && mm < 3) lunarYear = yy - 1;
+
+  // Can Chi
+  var canNam = VIET_CAN[(lunarYear + 6) % 10];
+  var chiNam = VIET_CHI[(lunarYear + 8) % 12];
+  
+  var canNgay = VIET_CAN[(dayNumber + 9) % 10];
+  var chiNgay = VIET_CHI[(dayNumber + 1) % 12];
+
+  var canThang = VIET_CAN[(lunarYear * 12 + lunarMonth + 3) % 10];
+  var chiThang = VIET_CHI[(lunarMonth + 1) % 12];
+
+  var hoangDaoDays = ['Thanh Long', 'Minh Đường', 'Thiên Hình', 'Chu Tước', 'Kim Quỹ', 'Kim Đường', 'Bạch Hổ', 'Ngọc Đường', 'Thiên Lao', 'Huyền Vũ', 'Tư Mệnh', 'Câu Trận'];
+  var hdIdx = (dayNumber + 1) % 12;
+  var isHoangDao = [0, 1, 4, 5, 7, 10].includes(hdIdx);
+
+  return {
+    day: lunarDay,
+    month: lunarMonth,
+    year: lunarYear,
+    isLeap: lunarLeap,
+    canChiNam: canNam + ' ' + chiNam,
+    canChiThang: canThang + ' ' + chiThang,
+    canChiNgay: canNgay + ' ' + chiNgay,
+    tenTruc: hoangDaoDays[hdIdx],
+    isHoangDao: isHoangDao
+  };
+}
+
+// ================= NÂNG CẤP ĐỒNG HỒ LED 3D & LỊCH ÂM DƯƠNG THỜI GIAN THỰC =================
+let CURRENT_CAL_VIEW = {
+  month: (new Date()).getMonth() + 1,
+  year: (new Date()).getFullYear(),
+  selectedDay: (new Date()).getDate()
+};
+
 function initLedLiveClock() {
   const clockEl = document.getElementById('led-live-clock');
-  if (!clockEl) return;
-  function updateTime() {
+  const solarEl = document.getElementById('led-solar-date');
+  const lunarEl = document.getElementById('led-lunar-date');
+  const badgeEl = document.getElementById('led-lunar-badge');
+
+  const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+  function updateClockDisplay() {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, '0');
     const m = String(now.getMinutes()).padStart(2, '0');
     const s = String(now.getSeconds()).padStart(2, '0');
-    clockEl.innerText = `${h}:${m}:${s}`;
+    
+    if (clockEl) clockEl.innerText = `${h}:${m}:${s}`;
+
+    const d = now.getDate();
+    const mo = now.getMonth() + 1;
+    const y = now.getFullYear();
+    const dow = daysOfWeek[now.getDay()];
+
+    if (solarEl) {
+      solarEl.innerText = `${dow}, ${String(d).padStart(2, '0')}/${String(mo).padStart(2, '0')}/${y}`;
+    }
+
+    try {
+      const lunar = getVietnameseLunarDate(d, mo, y);
+      if (lunarEl) {
+        lunarEl.innerText = `Âm lịch: ${String(lunar.day).padStart(2, '0')}/${String(lunar.month).padStart(2, '0')} (${lunar.canChiNam}) • Ngày ${lunar.canChiNgay}`;
+      }
+      if (badgeEl) {
+        if (lunar.isHoangDao) {
+          badgeEl.innerText = 'HOÀNG ĐẠO (TỐT)';
+          badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        } else {
+          badgeEl.innerText = 'BÌNH HÒA';
+          badgeEl.className = 'ml-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-500/20 text-slate-300 border border-slate-400/30';
+        }
+      }
+    } catch(err) {
+      console.warn("Lỗi tính âm lịch:", err);
+    }
   }
-  updateTime();
-  setInterval(updateTime, 1000);
+
+  updateClockDisplay();
+  setInterval(updateClockDisplay, 1000);
+}
+
+// ================= MODAL LỊCH THÁNG ÂM - DƯƠNG TƯƠNG TÁC =================
+function openLunarCalendarModal() {
+  const modal = document.getElementById('lunar-calendar-modal');
+  if (!modal) return;
+  const now = new Date();
+  CURRENT_CAL_VIEW.month = now.getMonth() + 1;
+  CURRENT_CAL_VIEW.year = now.getFullYear();
+  CURRENT_CAL_VIEW.selectedDay = now.getDate();
+  
+  renderLunarMonthCalendar(CURRENT_CAL_VIEW.month, CURRENT_CAL_VIEW.year);
+  selectCalendarDay(CURRENT_CAL_VIEW.selectedDay, CURRENT_CAL_VIEW.month, CURRENT_CAL_VIEW.year);
+  modal.classList.remove('hidden');
+}
+
+function closeLunarCalendarModal() {
+  const modal = document.getElementById('lunar-calendar-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function changeLunarCalMonth(delta) {
+  CURRENT_CAL_VIEW.month += delta;
+  if (CURRENT_CAL_VIEW.month > 12) {
+    CURRENT_CAL_VIEW.month = 1;
+    CURRENT_CAL_VIEW.year += 1;
+  } else if (CURRENT_CAL_VIEW.month < 1) {
+    CURRENT_CAL_VIEW.month = 12;
+    CURRENT_CAL_VIEW.year -= 1;
+  }
+  renderLunarMonthCalendar(CURRENT_CAL_VIEW.month, CURRENT_CAL_VIEW.year);
+}
+
+function jumpLunarCalToday() {
+  const now = new Date();
+  CURRENT_CAL_VIEW.month = now.getMonth() + 1;
+  CURRENT_CAL_VIEW.year = now.getFullYear();
+  CURRENT_CAL_VIEW.selectedDay = now.getDate();
+  renderLunarMonthCalendar(CURRENT_CAL_VIEW.month, CURRENT_CAL_VIEW.year);
+  selectCalendarDay(CURRENT_CAL_VIEW.selectedDay, CURRENT_CAL_VIEW.month, CURRENT_CAL_VIEW.year);
+}
+
+function renderLunarMonthCalendar(month, year) {
+  const titleEl = document.getElementById('lunar-cal-title-header');
+  if (titleEl) {
+    titleEl.innerText = `THÁNG ${month} NĂM ${year}`;
+  }
+
+  const gridEl = document.getElementById('lunar-cal-grid');
+  if (!gridEl) return;
+
+  const firstDayObj = new Date(year, month - 1, 1);
+  let firstDayDow = firstDayObj.getDay(); // 0 is Sunday, 1 is Monday
+  let startCol = (firstDayDow === 0) ? 6 : firstDayDow - 1;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+  const isCurrentMonthYear = (today.getFullYear() === year && (today.getMonth() + 1) === month);
+
+  let htmlStr = '';
+
+  // Các ô trống đầu tháng
+  for (let i = 0; i < startCol; i++) {
+    htmlStr += `<div class="p-2 rounded-lg bg-slate-50/50 border border-transparent"></div>`;
+  }
+
+  // Các ngày trong tháng
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = isCurrentMonthYear && (today.getDate() === d);
+    const isSelected = (CURRENT_CAL_VIEW.selectedDay === d);
+    const lunar = getVietnameseLunarDate(d, month, year);
+
+    let lunarText = lunar.day;
+    if (lunar.day === 1) lunarText = `01/${lunar.month}`;
+    else if (lunar.day === 15) lunarText = 'Rằm';
+
+    const isSpecialLunar = (lunar.day === 1 || lunar.day === 15);
+    const borderClass = isToday ? 'cal-today-glow bg-amber-50/50' : (isSelected ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-emerald-400 hover:bg-slate-50');
+
+    htmlStr += `
+      <div onclick="selectCalendarDay(${d}, ${month}, ${year})" class="p-2 rounded-xl border ${borderClass} flex flex-col justify-between min-h-[64px] cursor-pointer transition select-none relative group">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-sm ${isToday ? 'text-amber-600' : 'text-slate-800'}">${d}</span>
+          ${lunar.isHoangDao ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Hoàng Đạo (Tốt)"></span>' : ''}
+        </div>
+        <div class="text-right mt-1">
+          <span class="text-[10px] font-bold ${isSpecialLunar ? 'text-amber-600 font-black' : 'text-slate-400 group-hover:text-emerald-700'}">${lunarText}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  gridEl.innerHTML = htmlStr;
+}
+
+function selectCalendarDay(d, month, year) {
+  CURRENT_CAL_VIEW.selectedDay = d;
+  renderLunarMonthCalendar(month, year);
+
+  const solarTextEl = document.getElementById('cal-detail-solar-text');
+  const lunarTextEl = document.getElementById('cal-detail-lunar-text');
+  const canChiEl = document.getElementById('cal-detail-canchi-text');
+  const trucEl = document.getElementById('cal-detail-truc-text');
+  const badgeEl = document.getElementById('cal-detail-badge');
+  const adviseEl = document.getElementById('cal-detail-advise');
+
+  const dowNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+  const dayObj = new Date(year, month - 1, d);
+  const dow = dowNames[dayObj.getDay()];
+
+  const lunar = getVietnameseLunarDate(d, month, year);
+
+  if (solarTextEl) solarTextEl.innerText = `${dow}, Ngày ${String(d).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+  if (lunarTextEl) lunarTextEl.innerText = `Ngày ${String(lunar.day).padStart(2, '0')} Tháng ${String(lunar.month).padStart(2, '0')} (Âm Lịch)`;
+  if (canChiEl) canChiEl.innerText = `Ngày ${lunar.canChiNgay} • Tháng ${lunar.canChiThang} • Năm ${lunar.canChiNam}`;
+  if (trucEl) trucEl.innerText = `Trực ${lunar.tenTruc} (${lunar.isHoangDao ? 'Sao Tốt Chiếu' : 'Bình Thường'})`;
+
+  if (badgeEl) {
+    if (lunar.isHoangDao) {
+      badgeEl.innerText = 'HOÀNG ĐẠO (ĐẠI CÁT)';
+      badgeEl.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300';
+    } else {
+      badgeEl.innerText = 'NGÀY BÌNH HÒA';
+      badgeEl.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-300';
+    }
+  }
+
+  if (adviseEl) {
+    if (lunar.isHoangDao) {
+      adviseEl.innerText = '★ Rất vượng khí: Thích hợp ký phiếu đặt cọc lô đất, công chứng sang tên, động thổ xây dựng và giao dịch bất động sản phát tài.';
+    } else {
+      adviseEl.innerText = '★ Ngày bình hòa: Giao dịch bình thường, thích hợp tiếp khách xem đất thực tế và chuẩn bị hồ sơ pháp lý.';
+    }
+  }
 }
 
 // ================= HỆ THỐNG NHẬT KÝ THAO TÁC HỆ THỐNG (AUDIT LOGS) =================
