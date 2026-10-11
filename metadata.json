@@ -1,0 +1,6 @@
+{
+  "name": "BĐS PRO - Hệ Thống Quản Lý Đất Nền",
+  "description": "Hệ thống quản lý dự án đất nền, giao dịch, hoa hồng và bản đồ thực địa chuyên nghiệp cho môi giới bất động sản.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

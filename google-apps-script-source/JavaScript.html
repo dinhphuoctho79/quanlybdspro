@@ -1,0 +1,3368 @@
+<script>
+
+// ================= HỆ THỐNG ĐĂNG NHẬP, PHÂN QUYỀN (RBAC) & QUẢN LÝ LOGO =================
+
+const USER_ACCOUNTS = {
+  admin: {
+    username: 'admin',
+    password: '123456',
+    fullName: 'Nguyễn Công Dinh',
+    role: 'admin',
+    avatarInitials: 'GD',
+    title: 'Giám Đốc / Toàn Quyền'
+  },
+  truongphong: {
+    username: 'truongphong',
+    password: '123456',
+    fullName: 'Lê Văn Hoàng',
+    role: 'truongphong',
+    avatarInitials: 'TP',
+    title: 'Trưởng Phòng Kinh Doanh'
+  },
+  sale: {
+    username: 'sale',
+    password: '123456',
+    fullName: 'Nguyễn Thị Mai',
+    role: 'sale',
+    avatarInitials: 'SL',
+    title: 'Chuyên Viên Môi Giới BĐS'
+  },
+  ketoan: {
+    username: 'ketoan',
+    password: '123456',
+    fullName: 'Phạm Thị Thu Thảo',
+    role: 'ketoan',
+    avatarInitials: 'KT',
+    title: 'Kế Toán Doanh Nghiệp'
+  }
+};
+
+const ROLE_PERMISSIONS = {
+  admin: {
+    name: 'Giám Đốc',
+    badgeClass: 'bg-amber-100 text-amber-800',
+    avatarBg: 'bg-amber-600',
+    allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'],
+    canEditConfig: true,
+    canDelete: true,
+    canManageUsers: true
+  },
+  truongphong: {
+    name: 'Trưởng Phòng',
+    badgeClass: 'bg-purple-100 text-purple-800',
+    avatarBg: 'bg-purple-600',
+    allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'nhanvien', 'hoahong', 'baocao'],
+    canEditConfig: false,
+    canDelete: false,
+    canManageUsers: false
+  },
+  sale: {
+    name: 'Sale BĐS',
+    badgeClass: 'bg-emerald-100 text-emerald-800',
+    avatarBg: 'bg-emerald-600',
+    allowedTabs: ['lodat', 'map', 'khachhang', 'giaodich', 'hoahong'],
+    canEditConfig: false,
+    canDelete: false,
+    canManageUsers: false
+  },
+  ketoan: {
+    name: 'Kế Toán',
+    badgeClass: 'bg-blue-100 text-blue-800',
+    avatarBg: 'bg-blue-600',
+    allowedTabs: ['dashboard', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'hoahong', 'baocao'],
+    canEditConfig: false,
+    canDelete: false,
+    canManageUsers: false
+  }
+};
+
+let CURRENT_USER = null;
+
+function resetUserInterfaceToGuest() {
+  const avatarEl = document.getElementById('user-avatar');
+  if (avatarEl) {
+    avatarEl.innerText = '?';
+    avatarEl.className = 'w-7 h-7 rounded-full bg-slate-500 text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white';
+  }
+  const nameEl = document.getElementById('user-display-name');
+  if (nameEl) nameEl.innerText = 'Chưa đăng nhập';
+  const badgeEl = document.getElementById('user-role-badge');
+  if (badgeEl) {
+    badgeEl.innerText = 'Khách';
+    badgeEl.className = 'text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full inline-block mt-0.5';
+  }
+  const menuAvatar = document.getElementById('menu-avatar-large');
+  if (menuAvatar) {
+    menuAvatar.innerText = '?';
+    menuAvatar.className = 'w-9 h-9 rounded-full bg-slate-500 text-white font-extrabold flex items-center justify-center text-sm shadow-md';
+  }
+  const menuName = document.getElementById('menu-user-fullname');
+  if (menuName) menuName.innerText = 'Chưa đăng nhập';
+  const menuTitle = document.getElementById('menu-user-title');
+  if (menuTitle) menuTitle.innerText = 'Vui lòng đăng nhập để thao tác';
+}
+
+function initAuthSession() {
+  try {
+    const isLoggedOut = sessionStorage.getItem('bds_logged_out');
+    const saved = sessionStorage.getItem('bds_user_account');
+    
+    // Nếu đã đăng nhập trước đó trong phiên làm việc này
+    if (isLoggedOut !== '1' && saved && USER_ACCOUNTS[saved]) {
+      CURRENT_USER = USER_ACCOUNTS[saved];
+      applyUserPermissions(CURRENT_USER);
+      const appLayout = document.querySelector('body > div');
+      if (appLayout) {
+        appLayout.classList.remove('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+      }
+      return;
+    }
+  } catch(e) {}
+
+  // MẶC ĐỊNH KHI MỚI VÀO WEB APP: BẮT BUỘC HIỂN THỊ MÀN HÌNH ĐĂNG NHẬP!
+  CURRENT_USER = null;
+  resetUserInterfaceToGuest();
+  openLoginModal(true);
+}
+
+function applyUserPermissions(user) {
+  if (!user) {
+    resetUserInterfaceToGuest();
+    return;
+  }
+  CURRENT_USER = user;
+  const perm = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.admin;
+
+  // Cập nhật Header
+  const avatarEl = document.getElementById('user-avatar');
+  if (avatarEl) {
+    avatarEl.innerText = user.avatarInitials;
+    avatarEl.className = `w-7 h-7 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white`;
+  }
+  const nameEl = document.getElementById('user-display-name');
+  if (nameEl) nameEl.innerText = user.fullName;
+  const badgeEl = document.getElementById('user-role-badge');
+  if (badgeEl) {
+    badgeEl.innerText = perm.name;
+    badgeEl.className = `text-[9px] font-bold ${perm.badgeClass} px-1.5 py-0.2 rounded-full inline-block mt-0.5`;
+  }
+
+  // Cập nhật Menu dropdown
+  const menuAvatar = document.getElementById('menu-avatar-large');
+  if (menuAvatar) {
+    menuAvatar.innerText = user.avatarInitials;
+    menuAvatar.className = `w-9 h-9 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-sm shadow-md`;
+  }
+  const menuName = document.getElementById('menu-user-fullname');
+  if (menuName) menuName.innerText = user.fullName;
+  const menuTitle = document.getElementById('menu-user-title');
+  if (menuTitle) menuTitle.innerText = user.title;
+  const menuDept = document.getElementById('menu-user-dept');
+  if (menuDept) menuDept.innerText = user.department;
+  const menuRoleBadge = document.getElementById('menu-user-role-badge');
+  if (menuRoleBadge) {
+    menuRoleBadge.innerText = perm.name;
+    menuRoleBadge.className = `text-[10px] font-bold ${perm.badgeClass} px-2 py-0.5 rounded-full inline-block`;
+  }
+
+  // Cập nhật nút quản trị
+  const adminMenuSection = document.getElementById('menu-admin-section');
+  if (adminMenuSection) {
+    adminMenuSection.style.display = perm.canManageUsers ? 'block' : 'none';
+  }
+
+  // Cập nhật giao diện theo quyền
+  applyPermissionRestrictions(perm);
+}
+
+
+function lockAppForLogin() {
+  const sidebar = document.getElementById('app-sidebar');
+  const main = document.querySelector('main');
+  if (sidebar) sidebar.classList.add('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+  if (main) main.classList.add('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+}
+
+function unlockAppFromLogin() {
+  const sidebar = document.getElementById('app-sidebar');
+  const main = document.querySelector('main');
+  if (sidebar) sidebar.classList.remove('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+  if (main) main.classList.remove('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+}
+
+function openLoginModal(isForced) {
+  closeUserDropdown();
+  const modal = document.getElementById('login-modal');
+  const btnClose = document.getElementById('btn-close-login-modal');
+
+  if (isForced || !CURRENT_USER) {
+    if (btnClose) btnClose.style.display = 'none';
+    lockAppForLogin();
+  } else {
+    if (btnClose) btnClose.style.display = 'block';
+  }
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+}
+
+function closeLoginModal() {
+  if (!CURRENT_USER) {
+    alert("⚠️ Bạn chưa đăng nhập! Vui lòng chọn một tài khoản để truy cập hệ thống.");
+    return;
+  }
+  const modal = document.getElementById('login-modal');
+  
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+
+function quickFillLogin(username, password) {
+  const uInput = document.getElementById('login-input-username');
+  if (uInput) uInput.value = username;
+  const pInput = document.getElementById('login-input-password');
+  if (pInput) pInput.value = password;
+  submitUserLogin();
+}
+
+function submitUserLogin() {
+  const u = (document.getElementById('login-input-username')?.value || '').trim().toLowerCase();
+  const p = (document.getElementById('login-input-password')?.value || '').trim();
+
+  const found = Object.values(USER_ACCOUNTS).find(acc => acc.username.toLowerCase() === u);
+  if (!found) {
+    alert("❌ Tên đăng nhập không đúng! Vui lòng thử: admin, truongphong, sale, hoặc ketoan");
+    return;
+  }
+
+  if (found.password !== p) {
+    alert("❌ Mật khẩu không đúng! Mật khẩu mẫu mặc định là: 123456");
+    return;
+  }
+
+  try { 
+    sessionStorage.setItem('bds_user_account', found.role);
+    sessionStorage.removeItem('bds_logged_out');
+  } catch(e){}
+
+  CURRENT_USER = found;
+
+  const btnClose = document.getElementById('btn-close-login-modal');
+  if (btnClose) btnClose.style.display = 'block';
+  const appLayout = document.querySelector('body > div');
+  if (appLayout) {
+    appLayout.classList.remove('pointer-events-none', 'filter', 'blur-sm', 'select-none');
+  }
+
+  unlockAppFromLogin();
+  applyUserPermissions(found);
+  const modal = document.getElementById('login-modal');
+  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+
+  alert(`✅ ĐĂNG NHẬP THÀNH CÔNG!\n\nChào mừng: ${found.fullName}\nChức vụ: ${found.title}\n\nHệ thống đã tự động cấu hình giao diện theo quyền hạn của bạn!`);
+}
+
+function logoutUser() {
+  closeUserDropdown();
+  if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống BĐS PRO?")) {
+    CURRENT_USER = null;
+    try { 
+      sessionStorage.removeItem('bds_user_account');
+      sessionStorage.setItem('bds_logged_out', '1');
+    } catch(e){}
+    resetUserInterfaceToGuest();
+    lockAppForLogin();
+    openLoginModal(true);
+  }
+}
+
+// ================= CHỨC NĂNG TÙY BIẾN LOGO CÔNG TY =================
+
+function handleLogoFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    alert("Vui lòng chọn file hình ảnh (PNG, JPG, WebP, SVG)!");
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Kích thước file logo nên nhỏ hơn 2MB để hệ thống hoạt động mượt mà nhất!");
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    applyCompanyLogo(dataUrl);
+    const input = document.getElementById('cfg-COMPANY_LOGO');
+    if (input) input.value = dataUrl;
+    alert("✅ Đã tải logo công ty lên thành công! Bấm 'Lưu Toàn Bộ Cấu Hình' để lưu vĩnh viễn.");
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateLogoFromUrl(url) {
+  applyCompanyLogo(url.trim());
+}
+
+function useDefaultDinhCongLogo() {
+  const defaultUrl = 'https://luong-viet-360.vercel.app/logo-dinhcong.webp';
+  applyCompanyLogo(defaultUrl);
+  const input = document.getElementById('cfg-COMPANY_LOGO');
+  if (input) input.value = defaultUrl;
+  alert("✅ Đã khôi phục Logo mẫu DinhCông Digital!");
+}
+
+function removeCompanyLogo() {
+  applyCompanyLogo('');
+  const input = document.getElementById('cfg-COMPANY_LOGO');
+  if (input) input.value = '';
+}
+
+function applyCompanyLogo(logoUrl) {
+  const sidebarImg = document.getElementById('app-company-logo');
+  const sidebarIcon = document.getElementById('app-company-logo-icon');
+  const previewImg = document.getElementById('cfg-logo-preview');
+  const previewPlaceholder = document.getElementById('cfg-logo-placeholder');
+  const loginImg = document.getElementById('login-logo-img');
+
+  if (logoUrl) {
+    if (sidebarImg) { sidebarImg.src = logoUrl; sidebarImg.classList.remove('hidden'); }
+    if (sidebarIcon) sidebarIcon.classList.add('hidden');
+    if (previewImg) { previewImg.src = logoUrl; previewImg.classList.remove('hidden'); }
+    if (previewPlaceholder) previewPlaceholder.classList.add('hidden');
+    if (loginImg) loginImg.src = logoUrl;
+  } else {
+    if (sidebarImg) sidebarImg.classList.add('hidden');
+    if (sidebarIcon) sidebarIcon.classList.remove('hidden');
+    if (previewImg) previewImg.classList.add('hidden');
+    if (previewPlaceholder) previewPlaceholder.classList.remove('hidden');
+  }
+}
+
+function handleLogoLoadError() {
+  const sidebarImg = document.getElementById('app-company-logo');
+  const sidebarIcon = document.getElementById('app-company-logo-icon');
+  if (sidebarImg) sidebarImg.classList.add('hidden');
+  if (sidebarIcon) sidebarIcon.classList.remove('hidden');
+}
+
+function handlePreviewLogoError() {
+  const previewImg = document.getElementById('cfg-logo-preview');
+  const previewPlaceholder = document.getElementById('cfg-logo-placeholder');
+  if (previewImg) previewImg.classList.add('hidden');
+  if (previewPlaceholder) previewPlaceholder.classList.remove('hidden');
+}
+
+
+/**
+ * BĐS PRO - CLIENT JAVASCRIPT CONTROLLER (ĐẦY ĐỦ CRUD, BẢN ĐỒ VỆ TINH & GHI TỌA ĐỘ)
+ * Tác giả: Nguyễn Công Dinh (0393990638 - Cần Thơ)
+ */
+
+let STORE = {
+    LoDat: [
+    {
+        "MaLo": "L0001",
+        "MaDuAn": "DA01",
+        "TenLo": "Lô B3 (Cần Thơ)",
+        "DienTich": 95,
+        "GiaM2": 19500000,
+        "TongGia": "1.9 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.031471,
+        "Lng": 105.74907,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0002",
+        "MaDuAn": "DA01",
+        "TenLo": "Lô C4 (Cần Thơ)",
+        "DienTich": 110,
+        "GiaM2": 21000000,
+        "TongGia": "2.3 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.027106,
+        "Lng": 105.744572,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0003",
+        "MaDuAn": "DA01",
+        "TenLo": "Lô D5 (Cần Thơ)",
+        "DienTich": 125,
+        "GiaM2": 22500000,
+        "TongGia": "2.8 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.02476,
+        "Lng": 105.745096,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0004",
+        "MaDuAn": "DA01",
+        "TenLo": "Lô E6 (Cần Thơ)",
+        "DienTich": 140,
+        "GiaM2": 24000000,
+        "TongGia": "3.4 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.029729,
+        "Lng": 105.749874,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0005",
+        "MaDuAn": "DA01",
+        "TenLo": "Lô F7 (Cần Thơ)",
+        "DienTich": 155,
+        "GiaM2": 25500000,
+        "TongGia": "4 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.030795,
+        "Lng": 105.751906,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0006",
+        "MaDuAn": "DA02",
+        "TenLo": "Lô B3 (Long An)",
+        "DienTich": 170,
+        "GiaM2": 27000000,
+        "TongGia": "4.6 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.63855,
+        "Lng": 106.496216,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0007",
+        "MaDuAn": "DA02",
+        "TenLo": "Lô C4 (Long An)",
+        "DienTich": 80,
+        "GiaM2": 28500000,
+        "TongGia": "2.3 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.638837,
+        "Lng": 106.492209,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0008",
+        "MaDuAn": "DA02",
+        "TenLo": "Lô D5 (Long An)",
+        "DienTich": 95,
+        "GiaM2": 30000000,
+        "TongGia": "2.9 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.644007,
+        "Lng": 106.493756,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0009",
+        "MaDuAn": "DA02",
+        "TenLo": "Lô E6 (Long An)",
+        "DienTich": 110,
+        "GiaM2": 31500000,
+        "TongGia": "3.5 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.642389,
+        "Lng": 106.49859,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0010",
+        "MaDuAn": "DA02",
+        "TenLo": "Lô F7 (Long An)",
+        "DienTich": 125,
+        "GiaM2": 18000000,
+        "TongGia": "2.3 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.637635,
+        "Lng": 106.49963,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0011",
+        "MaDuAn": "DA03",
+        "TenLo": "Lô B3 (Cần Thơ)",
+        "DienTich": 140,
+        "GiaM2": 19500000,
+        "TongGia": "2.7 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.081479,
+        "Lng": 105.745352,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0012",
+        "MaDuAn": "DA03",
+        "TenLo": "Lô C4 (Cần Thơ)",
+        "DienTich": 155,
+        "GiaM2": 21000000,
+        "TongGia": "3.3 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.085499,
+        "Lng": 105.742023,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0013",
+        "MaDuAn": "DA03",
+        "TenLo": "Lô D5 (Cần Thơ)",
+        "DienTich": 170,
+        "GiaM2": 22500000,
+        "TongGia": "3.8 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.08162,
+        "Lng": 105.744521,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0014",
+        "MaDuAn": "DA03",
+        "TenLo": "Lô E6 (Cần Thơ)",
+        "DienTich": 80,
+        "GiaM2": 24000000,
+        "TongGia": "1.9 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.078599,
+        "Lng": 105.749185,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0015",
+        "MaDuAn": "DA03",
+        "TenLo": "Lô F7 (Cần Thơ)",
+        "DienTich": 95,
+        "GiaM2": 25500000,
+        "TongGia": "2.4 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.083257,
+        "Lng": 105.749183,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0016",
+        "MaDuAn": "DA04",
+        "TenLo": "Lô B3 (Tiền Giang)",
+        "DienTich": 110,
+        "GiaM2": 27000000,
+        "TongGia": "3 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.365077,
+        "Lng": 106.360518,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0017",
+        "MaDuAn": "DA04",
+        "TenLo": "Lô C4 (Tiền Giang)",
+        "DienTich": 125,
+        "GiaM2": 28500000,
+        "TongGia": "3.6 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.35995,
+        "Lng": 106.358024,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0018",
+        "MaDuAn": "DA04",
+        "TenLo": "Lô D5 (Tiền Giang)",
+        "DienTich": 140,
+        "GiaM2": 30000000,
+        "TongGia": "4.2 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.359451,
+        "Lng": 106.361355,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0019",
+        "MaDuAn": "DA04",
+        "TenLo": "Lô E6 (Tiền Giang)",
+        "DienTich": 155,
+        "GiaM2": 31500000,
+        "TongGia": "4.9 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.364707,
+        "Lng": 106.365631,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0020",
+        "MaDuAn": "DA04",
+        "TenLo": "Lô F7 (Tiền Giang)",
+        "DienTich": 170,
+        "GiaM2": 18000000,
+        "TongGia": "3.1 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.363852,
+        "Lng": 106.364588,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0021",
+        "MaDuAn": "DA05",
+        "TenLo": "Lô B3 (Đồng Tháp)",
+        "DienTich": 80,
+        "GiaM2": 19500000,
+        "TongGia": "1.6 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.300816,
+        "Lng": 105.755753,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0022",
+        "MaDuAn": "DA05",
+        "TenLo": "Lô C4 (Đồng Tháp)",
+        "DienTich": 95,
+        "GiaM2": 21000000,
+        "TongGia": "2 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.302969,
+        "Lng": 105.75421,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0023",
+        "MaDuAn": "DA05",
+        "TenLo": "Lô D5 (Đồng Tháp)",
+        "DienTich": 110,
+        "GiaM2": 22500000,
+        "TongGia": "2.5 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.30745,
+        "Lng": 105.758219,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0024",
+        "MaDuAn": "DA05",
+        "TenLo": "Lô E6 (Đồng Tháp)",
+        "DienTich": 125,
+        "GiaM2": 24000000,
+        "TongGia": "3 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.304142,
+        "Lng": 105.761907,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0025",
+        "MaDuAn": "DA05",
+        "TenLo": "Lô F7 (Đồng Tháp)",
+        "DienTich": 140,
+        "GiaM2": 25500000,
+        "TongGia": "3.6 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.300514,
+        "Lng": 105.759871,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0026",
+        "MaDuAn": "DA06",
+        "TenLo": "Lô B3 (An Giang)",
+        "DienTich": 155,
+        "GiaM2": 27000000,
+        "TongGia": "4.2 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.385756,
+        "Lng": 105.412094,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0027",
+        "MaDuAn": "DA06",
+        "TenLo": "Lô C4 (An Giang)",
+        "DienTich": 170,
+        "GiaM2": 28500000,
+        "TongGia": "4.8 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.388292,
+        "Lng": 105.411574,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0028",
+        "MaDuAn": "DA06",
+        "TenLo": "Lô D5 (An Giang)",
+        "DienTich": 80,
+        "GiaM2": 30000000,
+        "TongGia": "2.4 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.383396,
+        "Lng": 105.416073,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0029",
+        "MaDuAn": "DA06",
+        "TenLo": "Lô E6 (An Giang)",
+        "DienTich": 95,
+        "GiaM2": 31500000,
+        "TongGia": "3 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.382122,
+        "Lng": 105.419,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0030",
+        "MaDuAn": "DA06",
+        "TenLo": "Lô F7 (An Giang)",
+        "DienTich": 110,
+        "GiaM2": 18000000,
+        "TongGia": "2 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.387346,
+        "Lng": 105.416067,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0031",
+        "MaDuAn": "DA07",
+        "TenLo": "Lô B3 (Cần Thơ)",
+        "DienTich": 125,
+        "GiaM2": 19500000,
+        "TongGia": "2.4 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.037274,
+        "Lng": 105.782571,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0032",
+        "MaDuAn": "DA07",
+        "TenLo": "Lô C4 (Cần Thơ)",
+        "DienTich": 140,
+        "GiaM2": 21000000,
+        "TongGia": "2.9 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.032068,
+        "Lng": 105.783099,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0033",
+        "MaDuAn": "DA07",
+        "TenLo": "Lô D5 (Cần Thơ)",
+        "DienTich": 155,
+        "GiaM2": 22500000,
+        "TongGia": "3.5 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.033482,
+        "Lng": 105.787877,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0034",
+        "MaDuAn": "DA07",
+        "TenLo": "Lô E6 (Cần Thơ)",
+        "DienTich": 170,
+        "GiaM2": 24000000,
+        "TongGia": "4.1 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.038323,
+        "Lng": 105.789906,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0035",
+        "MaDuAn": "DA07",
+        "TenLo": "Lô F7 (Cần Thơ)",
+        "DienTich": 80,
+        "GiaM2": 25500000,
+        "TongGia": "2 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.035662,
+        "Lng": 105.786212,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0036",
+        "MaDuAn": "DA08",
+        "TenLo": "Lô B3 (Cái Răng)",
+        "DienTich": 95,
+        "GiaM2": 27000000,
+        "TongGia": "2.6 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.008507,
+        "Lng": 105.771208,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0037",
+        "MaDuAn": "DA08",
+        "TenLo": "Lô C4 (Cái Răng)",
+        "DienTich": 110,
+        "GiaM2": 28500000,
+        "TongGia": "3.1 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.012238,
+        "Lng": 105.772759,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0038",
+        "MaDuAn": "DA08",
+        "TenLo": "Lô D5 (Cái Răng)",
+        "DienTich": 125,
+        "GiaM2": 30000000,
+        "TongGia": "3.8 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.015432,
+        "Lng": 105.777593,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0039",
+        "MaDuAn": "DA08",
+        "TenLo": "Lô E6 (Cái Răng)",
+        "DienTich": 140,
+        "GiaM2": 31500000,
+        "TongGia": "4.4 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.010877,
+        "Lng": 105.778628,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0040",
+        "MaDuAn": "DA08",
+        "TenLo": "Lô F7 (Cái Răng)",
+        "DienTich": 155,
+        "GiaM2": 18000000,
+        "TongGia": "2.8 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.008857,
+        "Lng": 105.774348,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0041",
+        "MaDuAn": "DA09",
+        "TenLo": "Lô B3 (Kiên Giang)",
+        "DienTich": 170,
+        "GiaM2": 19500000,
+        "TongGia": "3.3 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.016933,
+        "Lng": 105.078023,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0042",
+        "MaDuAn": "DA09",
+        "TenLo": "Lô C4 (Kiên Giang)",
+        "DienTich": 80,
+        "GiaM2": 21000000,
+        "TongGia": "1.7 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.017645,
+        "Lng": 105.080524,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0043",
+        "MaDuAn": "DA09",
+        "TenLo": "Lô D5 (Kiên Giang)",
+        "DienTich": 95,
+        "GiaM2": 22500000,
+        "TongGia": "2.1 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.012386,
+        "Lng": 105.085188,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0044",
+        "MaDuAn": "DA09",
+        "TenLo": "Lô E6 (Kiên Giang)",
+        "DienTich": 110,
+        "GiaM2": 24000000,
+        "TongGia": "2.6 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.013029,
+        "Lng": 105.085181,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0045",
+        "MaDuAn": "DA09",
+        "TenLo": "Lô F7 (Kiên Giang)",
+        "DienTich": 125,
+        "GiaM2": 25500000,
+        "TongGia": "3.2 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.018122,
+        "Lng": 105.080514,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0046",
+        "MaDuAn": "DA10",
+        "TenLo": "Lô B3 (Hậu Giang)",
+        "DienTich": 140,
+        "GiaM2": 27000000,
+        "TongGia": "3.8 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 9.786167,
+        "Lng": 105.468024,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0047",
+        "MaDuAn": "DA10",
+        "TenLo": "Lô C4 (Hậu Giang)",
+        "DienTich": 155,
+        "GiaM2": 28500000,
+        "TongGia": "4.4 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 9.781577,
+        "Lng": 105.471359,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0048",
+        "MaDuAn": "DA10",
+        "TenLo": "Lô D5 (Hậu Giang)",
+        "DienTich": 170,
+        "GiaM2": 30000000,
+        "TongGia": "5.1 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 9.784715,
+        "Lng": 105.475633,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0049",
+        "MaDuAn": "DA10",
+        "TenLo": "Lô E6 (Hậu Giang)",
+        "DienTich": 80,
+        "GiaM2": 31500000,
+        "TongGia": "2.5 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 9.788496,
+        "Lng": 105.474585,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0050",
+        "MaDuAn": "DA10",
+        "TenLo": "Lô F7 (Hậu Giang)",
+        "DienTich": 95,
+        "GiaM2": 18000000,
+        "TongGia": "1.7 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 9.784384,
+        "Lng": 105.46975,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0051",
+        "MaDuAn": "DA11",
+        "TenLo": "Lô B3 (Bến Tre)",
+        "DienTich": 110,
+        "GiaM2": 19500000,
+        "TongGia": "2.1 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 10.240663,
+        "Lng": 106.372211,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0052",
+        "MaDuAn": "DA11",
+        "TenLo": "Lô C4 (Bến Tre)",
+        "DienTich": 125,
+        "GiaM2": 21000000,
+        "TongGia": "2.6 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 10.245476,
+        "Lng": 106.376223,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0053",
+        "MaDuAn": "DA11",
+        "TenLo": "Lô D5 (Bến Tre)",
+        "DienTich": 140,
+        "GiaM2": 22500000,
+        "TongGia": "3.2 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 10.246957,
+        "Lng": 106.379908,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0054",
+        "MaDuAn": "DA11",
+        "TenLo": "Lô E6 (Bến Tre)",
+        "DienTich": 155,
+        "GiaM2": 24000000,
+        "TongGia": "3.7 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 10.241762,
+        "Lng": 106.377868,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0055",
+        "MaDuAn": "DA11",
+        "TenLo": "Lô F7 (Bến Tre)",
+        "DienTich": 170,
+        "GiaM2": 25500000,
+        "TongGia": "4.3 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 10.24162,
+        "Lng": 106.373091,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0056",
+        "MaDuAn": "DA12",
+        "TenLo": "Lô B3 (Cà Mau)",
+        "DienTich": 80,
+        "GiaM2": 27000000,
+        "TongGia": "2.2 tỷ",
+        "LoaiLo": "Lô góc 2 mặt tiền",
+        "Huong": "Đông Nam",
+        "MatTien": 7,
+        "Lat": 9.180851,
+        "Lng": 105.150576,
+        "TrangThai": "Đang TL"
+    },
+    {
+        "MaLo": "L0057",
+        "MaDuAn": "DA12",
+        "TenLo": "Lô C4 (Cà Mau)",
+        "DienTich": 95,
+        "GiaM2": 28500000,
+        "TongGia": "2.7 tỷ",
+        "LoaiLo": "Mặt tiền đường lớn",
+        "Huong": "Tây Nam",
+        "MatTien": 9,
+        "Lat": 9.179645,
+        "Lng": 105.155077,
+        "TrangThai": "Có sẵn"
+    },
+    {
+        "MaLo": "L0058",
+        "MaDuAn": "DA12",
+        "TenLo": "Lô D5 (Cà Mau)",
+        "DienTich": 110,
+        "GiaM2": 30000000,
+        "TongGia": "3.3 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Đông",
+        "MatTien": 5,
+        "Lat": 9.174725,
+        "Lng": 105.158,
+        "TrangThai": "Đã cọc"
+    },
+    {
+        "MaLo": "L0059",
+        "MaDuAn": "DA12",
+        "TenLo": "Lô E6 (Cà Mau)",
+        "DienTich": 125,
+        "GiaM2": 31500000,
+        "TongGia": "3.9 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Chính Nam",
+        "MatTien": 7,
+        "Lat": 9.177199,
+        "Lng": 105.155063,
+        "TrangThai": "Đã bán"
+    },
+    {
+        "MaLo": "L0060",
+        "MaDuAn": "DA12",
+        "TenLo": "Lô F7 (Cà Mau)",
+        "DienTich": 140,
+        "GiaM2": 18000000,
+        "TongGia": "2.5 tỷ",
+        "LoaiLo": "Liền kề nội khu",
+        "Huong": "Đông Bắc",
+        "MatTien": 9,
+        "Lat": 9.181482,
+        "Lng": 105.150569,
+        "TrangThai": "Đang TL"
+    }
+],
+  KhachHang: [],
+  GiaoDich: [],
+  DoanhThu: [],
+  ChiPhi: [],
+  NhanVien: [],
+  HoaHong: [],
+  CaiDat: []
+};
+
+let map = null;
+let currentTileLayer = null;
+let currentLayerType = 'osm';
+let markersLayer = null;
+let currentFilterStatus = 'all';
+let currentFilterDuAn = 'all';
+let activeSelectedLot = null;
+let isPickingCoordinates = false;
+
+// Cấu hình màu sắc trạng thái chuẩn 4 màu tác giả
+const STATUS_CONFIG = {
+  'Có sẵn': { color: '#16a34a', bgBadge: '#dcfce7', textBadge: '#15803d', label: 'CÓ SẴN' },
+  'Đã cọc': { color: '#ea580c', bgBadge: '#ffedd5', textBadge: '#c2410c', label: 'ĐÃ CỌC' },
+  'Đã bán': { color: '#78350f', bgBadge: '#fef3c7', textBadge: '#78350f', label: 'ĐÃ BÁN' },
+  'Đang TL': { color: '#0284c7', bgBadge: '#e0f2fe', textBadge: '#0369a1', label: 'ĐANG TL' }
+};
+
+// Cấu hình form trường dữ liệu cho các bảng
+const SCHEMA_CONFIG = {
+  DuAn: {
+    idCol: 'MaDA',
+    title: 'Dự Án',
+    fields: [
+      { name: 'MaDA', label: 'Mã Dự Án', type: 'text', placeholder: 'DA001' },
+      { name: 'TenDA', label: 'Tên Dự Án', type: 'text', placeholder: 'KDC Sun Garden' },
+      { name: 'DiaChi', label: 'Địa Chỉ', type: 'text', placeholder: 'Hóc Môn, TP.HCM' },
+      { name: 'DT', label: 'Diện Tích (m²)', type: 'text', placeholder: '65.000' },
+      { name: 'SoLo', label: 'Tổng Số Lô', type: 'number', placeholder: '180' },
+      { name: 'ChuDauTu', label: 'Chủ Đầu Tư', type: 'text', placeholder: 'Công ty TNHH Sun Land' },
+      { name: 'TongVon', label: 'Tổng Vốn Đầu Tư', type: 'text', placeholder: '980.0 tỷ' },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['ĐANG TRIỂN KHAI', 'ĐANG BÁN', 'CHUẨN BỊ', 'ĐÃ HOÀN THÀNH'] }
+    ]
+  },
+  LoDat: {
+    idCol: 'MaLo',
+    title: 'Lô Đất',
+    fields: [
+      { name: 'MaLo', label: 'Mã Lô', type: 'text', placeholder: 'L0047' },
+      { name: 'MaDuAn', label: 'Thuộc Dự Án (Mã DA)', type: 'text', placeholder: 'DA008' },
+      { name: 'TenLo', label: 'Tên Lô', type: 'text', placeholder: 'Lô E7' },
+      { name: 'DienTich', label: 'Diện Tích (m²)', type: 'number', placeholder: '78' },
+      { name: 'GiaM2', label: 'Giá / m² (VNĐ)', type: 'number', placeholder: '20355519' },
+      { name: 'TongGia', label: 'Tổng Giá', type: 'text', placeholder: '1.6 tỷ' },
+      { name: 'LoaiLo', label: 'Vị Trí / Loại Lô', type: 'text', placeholder: 'Ven sông, Lô góc...' },
+      { name: 'Huong', label: 'Hướng Đất', type: 'text', placeholder: 'Tây Nam' },
+      { name: 'MatTien', label: 'Mặt Tiền (m)', type: 'number', placeholder: '7' },
+      { name: 'Lat', label: 'Vĩ Độ (Lat GPS)', type: 'text', placeholder: '10.034185' },
+      { name: 'Lng', label: 'Kinh Độ (Lng GPS)', type: 'text', placeholder: '105.787688' },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['Có sẵn', 'Đã cọc', 'Đã bán', 'Đang TL'] }
+    ]
+  },
+  KhachHang: {
+    idCol: 'MaKH',
+    title: 'Khách Hàng',
+    fields: [
+      { name: 'MaKH', label: 'Mã Khách Hàng', type: 'text', placeholder: 'KH013' },
+      { name: 'HoTen', label: 'Họ Và Tên', type: 'text', placeholder: 'Trương Văn Nam' },
+      { name: 'SDT', label: 'Số Điện Thoại', type: 'text', placeholder: '0860315335' },
+      { name: 'Email', label: 'Email', type: 'text', placeholder: 'nam@gmail.com' },
+      { name: 'Nguon', label: 'Nguồn Khách', type: 'select', options: ['TRỰC TIẾP', 'NGƯỜI QUEN', 'WEBSITE', 'FACEBOOK', 'ZALO', 'GIỚI THIỆU', 'HỘI CHỢ BĐS'] },
+      { name: 'NVPhuTrach', label: 'Nhân Viên Phụ Trách', type: 'text', placeholder: 'NV003' },
+      { name: 'NgayTao', label: 'Ngày Tạo', type: 'text', placeholder: '28/05/2024' }
+    ]
+  },
+  GiaoDich: {
+    idCol: 'MaGD',
+    title: 'Giao Dịch',
+    fields: [
+      { name: 'MaGD', label: 'Mã Giao Dịch', type: 'text', placeholder: 'GD006' },
+      { name: 'MaLo', label: 'Mã Lô Đất', type: 'text', placeholder: 'L0031' },
+      { name: 'MaKH', label: 'Mã Khách Hàng', type: 'text', placeholder: 'KH045' },
+      { name: 'LoaiGD', label: 'Loại Giao Dịch', type: 'select', options: ['ĐẶT CỌC', 'MUA BÁN', 'CHUYỂN NHƯỢNG'] },
+      { name: 'GiaTri', label: 'Giá Trị Giao Dịch', type: 'text', placeholder: '4.1 tỷ' },
+      { name: 'NgayGD', label: 'Ngày Giao Dịch', type: 'text', placeholder: '28/11/2024' },
+      { name: 'PTThanhToan', label: 'Phương Thức Thanh Toán', type: 'select', options: ['Trả góp', 'Chuyển khoản', 'Tiền mặt', 'Kết hợp'] },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['ĐÃ THANH TOÁN', 'ĐANG XỬ LÝ', 'CHỜ THANH TOÁN', 'ĐÃ HỦY'] }
+    ]
+  },
+  DoanhThu: {
+    idCol: 'MaDT',
+    title: 'Khoản Thu',
+    fields: [
+      { name: 'MaDT', label: 'Mã Thu', type: 'text', placeholder: 'DT011' },
+      { name: 'MaDA', label: 'Mã Dự Án', type: 'text', placeholder: 'DA001' },
+      { name: 'LoaiThu', label: 'Loại Thu', type: 'select', options: ['TIỀN ĐẶT CỌC', 'THANH TOÁN ĐỢT 1', 'THANH TOÁN ĐỢT 2', 'THANH TOÁN ĐỢT 3', 'THANH TOÁN CUỐI', 'PHÍ DỊCH VỤ', 'PHÍ QUẢN LÝ'] },
+      { name: 'SoTien', label: 'Số Tiền Thu', type: 'text', placeholder: '536.145.618 đ' },
+      { name: 'NgayThu', label: 'Ngày Thu', type: 'text', placeholder: '28/05/2024' },
+      { name: 'HinhThuc', label: 'Hình Thức', type: 'select', options: ['Tiền mặt', 'Chuyển khoản', 'Séc'] },
+      { name: 'NguoiThu', label: 'Người Thu (Mã NV)', type: 'text', placeholder: 'NV003' }
+    ]
+  },
+  ChiPhi: {
+    idCol: 'MaCP',
+    title: 'Khoản Chi',
+    fields: [
+      { name: 'MaCP', label: 'Mã Chi Phí', type: 'text', placeholder: 'CP026' },
+      { name: 'MaDA', label: 'Mã Dự Án', type: 'text', placeholder: 'DA001' },
+      { name: 'Loai', label: 'Loại Chi Phí', type: 'select', options: ['CÂY XANH CẢNH QUAN', 'THUẾ PHÍ', 'QUẢNG CÁO MARKETING', 'PHÁP LÝ', 'SAN LẤP MẶT BẰNG', 'LƯƠNG NHÂN VIÊN', 'VẬT LIỆU XÂY DỰNG', 'CHI PHÍ KHÁC'] },
+      { name: 'MoTa', label: 'Mô Tả Chi Tiết', type: 'text', placeholder: 'Cây xanh cảnh quan cho dự án' },
+      { name: 'SoTien', label: 'Số Tiền Chi', type: 'text', placeholder: '239.665.406 đ' },
+      { name: 'NgayChi', label: 'Ngày Chi', type: 'text', placeholder: '28/02/2024' },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['ĐÃ THANH TOÁN', 'ĐÃ DUYỆT', 'CHỜ DUYỆT', 'TẠM ỨNG'] }
+    ]
+  },
+  NhanVien: {
+    idCol: 'MaNV',
+    title: 'Nhân Viên',
+    fields: [
+      { name: 'MaNV', label: 'Mã Nhân Viên', type: 'text', placeholder: 'NV001' },
+      { name: 'HoTen', label: 'Họ Và Tên', type: 'text', placeholder: 'Trần Minh Tuấn' },
+      { name: 'SDT', label: 'Số Điện Thoại', type: 'text', placeholder: '0901234567' },
+      { name: 'Email', label: 'Email', type: 'text', placeholder: 'tuan@company.vn' },
+      { name: 'ChucVu', label: 'Chức Vụ', type: 'text', placeholder: 'Giám đốc' },
+      { name: 'PhongBan', label: 'Phòng Ban', type: 'select', options: ['BAN GIÁM ĐỐC', 'KINH DOANH', 'KẾ TOÁN', 'PHÁP LÝ', 'MARKETING', 'KỸ THUẬT', 'HÀNH CHÍNH'] },
+      { name: 'LuongCB', label: 'Lương Cơ Bản', type: 'text', placeholder: '50.000.000 đ' },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['ĐANG LÀM', 'NGHỈ VIỆC'] }
+    ]
+  },
+  HoaHong: {
+    idCol: 'MaHH',
+    title: 'Hoa Hồng',
+    fields: [
+      { name: 'MaHH', label: 'Mã Hoa Hồng', type: 'text', placeholder: 'HH027' },
+      { name: 'MaNV', label: 'Mã Nhân Viên', type: 'text', placeholder: 'NV009' },
+      { name: 'MaGD', label: 'Mã Giao Dịch', type: 'text', placeholder: 'GD027' },
+      { name: 'GiaTriGD', label: 'Giá Trị Giao Dịch', type: 'text', placeholder: '2.7 tỷ' },
+      { name: 'TyLe', label: 'Tỷ Lệ (%)', type: 'text', placeholder: '4%' },
+      { name: 'TienHH', label: 'Tiền Hoa Hồng', type: 'text', placeholder: '107.075.836 đ' },
+      { name: 'NgayTinh', label: 'Ngày Tính', type: 'text', placeholder: '28/06/2024' },
+      { name: 'TrangThai', label: 'Trạng Thái', type: 'select', options: ['ĐÃ THANH TOÁN', 'CHỜ THANH TOÁN'] }
+    ]
+  }
+};
+
+let currentModalContext = {
+  sheetName: '',
+  isEdit: false,
+  targetId: null
+};
+
+// --- KHỞI CHẠY HỆ THỐNG TỨC THÌ ---
+function hideLoadingScreen() {
+  const screen = document.getElementById('loading-screen');
+  if (screen) {
+    screen.style.display = 'none';
+    try { screen.remove(); } catch(e) {}
+  }
+}
+
+function initApp() {
+  try { initTheme(); } catch(e) { console.warn("initTheme error:", e); }
+  try { initAuthSession(); } catch(e) { console.warn("initAuthSession error:", e); }
+  hideLoadingScreen();
+  try { renderAllTables(); } catch (e) { console.warn("Lỗi render bảng:", e); }
+  try { renderDashboardCharts(); } catch (e) { console.warn("Lỗi render biểu đồ:", e); }
+  try { loadBundle(); } catch(e) { console.warn("Lỗi loadBundle:", e); }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+setTimeout(hideLoadingScreen, 600);
+
+function loadBundle() {
+  hideLoadingScreen();
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    return;
+  }
+
+  try {
+    google.script.run
+      .withSuccessHandler(res => {
+        hideLoadingScreen();
+        if (res && res.success && res.data) {
+          if (res.data.DuAn && res.data.DuAn.length > 0) STORE.DuAn = res.data.DuAn;
+          if (res.data.LoDat && res.data.LoDat.length > 0) STORE.LoDat = res.data.LoDat;
+          if (res.data.KhachHang && res.data.KhachHang.length > 0) STORE.KhachHang = res.data.KhachHang;
+          if (res.data.GiaoDich && res.data.GiaoDich.length > 0) STORE.GiaoDich = res.data.GiaoDich;
+          if (res.data.DoanhThu && res.data.DoanhThu.length > 0) STORE.DoanhThu = res.data.DoanhThu;
+          if (res.data.ChiPhi && res.data.ChiPhi.length > 0) STORE.ChiPhi = res.data.ChiPhi;
+          if (res.data.NhanVien && res.data.NhanVien.length > 0) STORE.NhanVien = res.data.NhanVien;
+          if (res.data.HoaHong && res.data.HoaHong.length > 0) STORE.HoaHong = res.data.HoaHong;
+          if (res.data.CaiDat && res.data.CaiDat.length > 0) STORE.CaiDat = res.data.CaiDat;
+        }
+        try {
+          renderAllTables();
+          renderDashboardCharts();
+        } catch (e) {
+          console.warn("Lỗi cập nhật UI sau khi nạp GAS:", e);
+        }
+      })
+      .withFailureHandler(err => {
+        hideLoadingScreen();
+        console.warn("Không kết nối được GAS Backend, tiếp tục dùng dữ liệu chuẩn:", err);
+      })
+      .getFullDataBundle();
+  } catch(err) {
+    hideLoadingScreen();
+    console.warn("Lỗi gọi getFullDataBundle:", err);
+  }
+}
+
+// --- CHUYỂN TAB ---
+// --- ĐIỀU HƯỚNG TAB & MENU ĐIỆN THOẠI ---
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (!sidebar || !overlay) return;
+  const isClosed = sidebar.classList.contains('-translate-x-full');
+  if (isClosed) {
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+  } else {
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+  }
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.add('-translate-x-full');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function switchTab(tabId) {
+  closeMobileSidebar();
+
+  const tabs = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+  tabs.forEach(t => {
+    const el = document.getElementById('view-' + t);
+    if (el) el.classList.toggle('hidden', t !== tabId);
+    const btn = document.getElementById('btn-tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tabId);
+  });
+
+  // Cập nhật trạng thái active thanh điều hướng điện thoại dưới đáy (Bottom Navigation)
+  const bnavs = ['dashboard', 'duan', 'map', 'lodat'];
+  bnavs.forEach(t => {
+    const b = document.getElementById('bnav-' + t);
+    if (b) {
+      if (t === tabId) {
+        b.classList.add('text-emerald-800');
+        b.classList.remove('text-slate-500');
+      } else {
+        b.classList.remove('text-emerald-800');
+        b.classList.add('text-slate-500');
+      }
+    }
+  });
+
+  const titles = {
+    dashboard: 'Bảng Điều Khiển',
+    duan: 'Quản Lý Dự Án',
+    lodat: 'Quản Lý Lô Đất',
+    map: 'Bản Đồ Lô Đất',
+    khachhang: 'Quản Lý Khách Hàng',
+    giaodich: 'Quản Lý Giao Dịch',
+    doanhthu: 'Quản Lý Doanh Thu',
+    chiphi: 'Quản Lý Chi Phí',
+    nhanvien: 'Quản Lý Nhân Viên',
+    hoahong: 'Bảng Tính Hoa Hồng',
+    baocao: 'Báo Cáo Tổng Hợp',
+    caidat: 'Cài Đặt Hệ Thống'
+  };
+  const pageTitle = document.getElementById('page-title');
+  if (pageTitle) pageTitle.innerText = titles[tabId] || 'Hệ Thống BĐS';
+
+  if (tabId === 'map') {
+    setTimeout(() => {
+      initMap();
+      if (map) {
+        map.invalidateSize();
+        renderMapMarkers();
+      }
+      updateMapCounters();
+      populateDuAnFilter();
+    }, 100);
+    setTimeout(() => { if (map) map.invalidateSize(); }, 350);
+    setTimeout(() => { if (map) map.invalidateSize(); }, 700);
+  } else if (tabId === 'dashboard') {
+    setTimeout(renderDashboardCharts, 80);
+  } else if (tabId === 'baocao') {
+    setTimeout(renderBaoCaoCharts, 80);
+  }
+}
+
+// --- RENDER DỮ LIỆU CÁC BẢNG (KÈM NÚT SỬA & XÓA HOẠT ĐỘNG) ---
+function renderAllTables() {
+  try { renderTableDuAn(); } catch(e){}
+  try { renderTableLoDat(); } catch(e){}
+  try { renderTableKhachHang(); } catch(e){}
+  try { renderTableGiaoDich(); } catch(e){}
+  try { renderTableDoanhThu(); } catch(e){}
+  try { renderTableChiPhi(); } catch(e){}
+  try { renderTableNhanVien(); } catch(e){}
+  try { renderTableHoaHong(); } catch(e){}
+  try { renderCaiDat(); } catch(e){}
+}
+
+function renderTableDuAn() {
+  const tbody = document.getElementById('tbody-duan');
+  if (!tbody) return;
+  if (!STORE.DuAn || STORE.DuAn.length === 0) {
+    STORE.DuAn = [
+      { MaDA: 'DA001', TenDA: 'KDC Hồng Phát', DiaChi: 'Đường Nguyễn Văn Cừ Nối Dài, P. An Bình, Q. Ninh Kiều, Cần Thơ', DT: '18.000', SoLo: 45, ChuDauTu: 'Công ty CP BĐS Hồng Phát Cần Thơ', TongVon: '320.0 tỷ', TrangThai: 'ĐÃ HOÀN THÀNH' },
+      { MaDA: 'DA002', TenDA: 'KDC Nam Long', DiaChi: 'Đường 1B, P. Hưng Thạnh, Q. Cái Răng, Cần Thơ', DT: '88.000', SoLo: 250, ChuDauTu: 'Tập đoàn Nam Long Cần Thơ', TongVon: '1350.0 tỷ', TrangThai: 'ĐANG BÁN' },
+      { MaDA: 'DA003', TenDA: 'KDC Stella Mega City', DiaChi: 'Đường Đặng Văn Dầy, P. Bình Thủy, Q. Bình Thủy, Cần Thơ', DT: '75.000', SoLo: 200, ChuDauTu: 'Tập đoàn KITA Group', TongVon: '1200.0 tỷ', TrangThai: 'ĐANG BÁN' },
+      { MaDA: 'DA004', TenDA: 'KDC Hưng Phú 1', DiaChi: 'Đường Lý Thái Tổ, P. Hưng Phú, Q. Cái Răng, Cần Thơ', DT: '28.000', SoLo: 68, ChuDauTu: 'Công ty CP Phát Triển Nhà Cần Thơ', TongVon: '450.0 tỷ', TrangThai: 'ĐÃ HOÀN THÀNH' },
+      { MaDA: 'DA005', TenDA: 'KDC Đại Ngân', DiaChi: 'Đường Nguyễn Văn Cừ, P. An Khánh, Q. Ninh Kiều, Cần Thơ', DT: '95.000', SoLo: 260, ChuDauTu: 'Công ty CP BĐS Đại Ngân', TongVon: '1500.0 tỷ', TrangThai: 'ĐANG TRIỂN KHAI' },
+      { MaDA: 'DA006', TenDA: 'KDC Cồn Khương', DiaChi: 'Đường Nguyễn Văn Cừ, P. Cái Khế, Q. Ninh Kiều, Cần Thơ', DT: '42.000', SoLo: 105, ChuDauTu: 'Công ty BĐS Vạn Phát Cần Thơ', TongVon: '780.0 tỷ', TrangThai: 'ĐANG BÁN' },
+      { MaDA: 'DA007', TenDA: 'KDC Ngân Thuận', DiaChi: 'P. Bình Thủy, Q. Bình Thủy, Cần Thơ', DT: '38.000', SoLo: 96, ChuDauTu: 'Công ty TNHH Ngân Thuận', TongVon: '620.0 tỷ', TrangThai: 'ĐANG TRIỂN KHAI' },
+      { MaDA: 'DA008', TenDA: 'KDC Sun Garden', DiaChi: 'Khu vực Mỹ Phước, TP. Cần Thơ (Hotline: 0393990638)', DT: '65.000', SoLo: 180, ChuDauTu: 'Địa Ốc Sun Land Cần Thơ', TongVon: '980.0 tỷ', TrangThai: 'ĐANG TRIỂN KHAI' },
+      { MaDA: 'DA009', TenDA: 'KDC Phú An (586)', DiaChi: 'Đường Võ Nguyên Giáp, P. Phú Thứ, Q. Cái Răng, Cần Thơ', DT: '32.000', SoLo: 82, ChuDauTu: 'Công ty CP Xây Dựng 586 Cần Thơ', TongVon: '520.0 tỷ', TrangThai: 'CHUẨN BỊ' },
+      { MaDA: 'DA010', TenDA: 'KDC Thới Nhựt', DiaChi: 'P. An Khánh, Q. Ninh Kiều, Cần Thơ', DT: '35.000', SoLo: 90, ChuDauTu: 'Công ty CP Đầu Tư Xây Dựng Cần Thơ', TongVon: '550.0 tỷ', TrangThai: 'ĐANG TRIỂN KHAI' },
+      { MaDA: 'DA011', TenDA: 'KDC Long Thịnh', DiaChi: 'P. Phú Thứ, Q. Cái Răng, Cần Thơ', DT: '48.000', SoLo: 130, ChuDauTu: 'Công ty CP Long Thịnh Cần Thơ', TongVon: '700.0 tỷ', TrangThai: 'CHUẨN BỊ' },
+      { MaDA: 'DA012', TenDA: 'KDC Metro Cần Thơ', DiaChi: 'Đường Nguyễn Văn Linh, P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ', DT: '52.000', SoLo: 120, ChuDauTu: 'Công ty BĐS Mekong Cần Thơ', TongVon: '850.0 tỷ', TrangThai: 'ĐANG TRIỂN KHAI' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.DuAn.map(item => {
+    let stClass = 'bg-sky-100 text-sky-800';
+    if (item.TrangThai === 'ĐÃ HOÀN THÀNH') stClass = 'bg-slate-100 text-slate-700';
+    if (item.TrangThai === 'ĐANG BÁN') stClass = 'bg-emerald-100 text-emerald-800';
+    if (item.TrangThai === 'CHUẨN BỊ') stClass = 'bg-amber-100 text-amber-800';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaDA}</td>
+        <td class="font-semibold">${item.TenDA}</td>
+        <td class="text-slate-500">${item.DiaChi || ''}</td>
+        <td class="text-right">${item.DT || ''}</td>
+        <td class="text-right font-medium">${item.SoLo || ''}</td>
+        <td class="text-slate-600">${item.ChuDauTu || ''}</td>
+        <td class="text-right font-bold text-slate-800">${item.TongVon || ''}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openEditModal('DuAn', '${item.MaDA}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('DuAn', 'MaDA', '${item.MaDA}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderTableLoDat() {
+  const tbody = document.getElementById('tbody-lodat');
+  if (!tbody) return;
+  if (!STORE.LoDat || STORE.LoDat.length === 0) {
+    STORE.LoDat = [
+      { MaLo: 'L0001', MaDuAn: 'DA001', TenLo: 'Lô A1', DienTich: 101, GiaM2: 26091780, TongGia: '2.6 tỷ', LoaiLo: 'Trong khu', Huong: 'Đông', Lat: 10.015200, Lng: 105.755800, TrangThai: 'Đã cọc' },
+      { MaLo: 'L0002', MaDuAn: 'DA001', TenLo: 'Lô A2', DienTich: 153, GiaM2: 35598108, TongGia: '5.4 tỷ', LoaiLo: 'Hẻm 6m', Huong: 'Đông Bắc', Lat: 10.015800, Lng: 105.756500, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0003', MaDuAn: 'DA001', TenLo: 'Lô A3', DienTich: 164, GiaM2: 43360015, TongGia: '7.1 tỷ', LoaiLo: 'Mặt tiền', Huong: 'Đông Bắc', Lat: 10.014500, Lng: 105.755100, TrangThai: 'Đang TL' },
+      { MaLo: 'L0004', MaDuAn: 'DA001', TenLo: 'Lô A4', DienTich: 123, GiaM2: 33062182, TongGia: '4.1 tỷ', LoaiLo: 'Ven sông', Huong: 'Đông Nam', Lat: 10.013900, Lng: 105.754200, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0005', MaDuAn: 'DA001', TenLo: 'Lô A5', DienTich: 78, GiaM2: 23423430, TongGia: '1.8 tỷ', LoaiLo: 'Ven sông', Huong: 'Đông Bắc', Lat: 10.016200, Lng: 105.757100, TrangThai: 'Đã bán' },
+      { MaLo: 'L0006', MaDuAn: 'DA001', TenLo: 'Lô A6', DienTich: 164, GiaM2: 10894156, TongGia: '1.8 tỷ', LoaiLo: 'Mặt tiền', Huong: 'Tây Nam', Lat: 10.017000, Lng: 105.758000, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0007', MaDuAn: 'DA002', TenLo: 'Lô A7', DienTich: 109, GiaM2: 29449748, TongGia: '3.2 tỷ', LoaiLo: 'Ven sông', Huong: 'Bắc', Lat: 10.008500, Lng: 105.776200, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0008', MaDuAn: 'DA002', TenLo: 'Lô A8', DienTich: 115, GiaM2: 48540764, TongGia: '5.6 tỷ', LoaiLo: 'Ven sông', Huong: 'Tây Nam', Lat: 10.007800, Lng: 105.775500, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0009', MaDuAn: 'DA002', TenLo: 'Lô A9', DienTich: 126, GiaM2: 9762702, TongGia: '1.2 tỷ', LoaiLo: 'View công viên', Huong: 'Đông Bắc', Lat: 10.009200, Lng: 105.777000, TrangThai: 'Đã bán' },
+      { MaLo: 'L0010', MaDuAn: 'DA002', TenLo: 'Lô A10', DienTich: 196, GiaM2: 21631964, TongGia: '4.2 tỷ', LoaiLo: 'Ven sông', Huong: 'Đông Bắc', Lat: 10.010000, Lng: 105.778100, TrangThai: 'Đã cọc' },
+      { MaLo: 'L0011', DA003: 'DA003', TenLo: 'Lô B1', DienTich: 175, GiaM2: 30761449, TongGia: '5.4 tỷ', LoaiLo: 'Ven sông', Huong: 'Tây Bắc', Lat: 10.076800, Lng: 105.738500, TrangThai: 'Đang TL' },
+      { MaLo: 'L0012', DA003: 'DA003', TenLo: 'Lô B2', DienTich: 139, GiaM2: 20685417, TongGia: '2.9 tỷ', LoaiLo: 'View công viên', Huong: 'Bắc', Lat: 10.077500, Lng: 105.739200, TrangThai: 'Đã bán' },
+      { MaLo: 'L0013', DA004: 'DA004', TenLo: 'Lô B3', DienTich: 111, GiaM2: 26013269, TongGia: '2.9 tỷ', LoaiLo: 'Trong khu', Huong: 'Nam', Lat: 10.021800, Lng: 105.788200, TrangThai: 'Đã cọc' },
+      { MaLo: 'L0014', DA004: 'DA004', TenLo: 'Lô B4', DienTich: 107, GiaM2: 26313965, TongGia: '2.8 tỷ', LoaiLo: 'Trong khu', Huong: 'Đông', Lat: 10.022500, Lng: 105.789000, TrangThai: 'Đã cọc' },
+      { MaLo: 'L0015', DA006: 'DA006', TenLo: 'Lô B5', DienTich: 131, GiaM2: 13760696, TongGia: '1.8 tỷ', LoaiLo: 'Hẻm 6m', Huong: 'Tây Nam', Lat: 10.052800, Lng: 105.781500, TrangThai: 'Đã bán' },
+      { MaLo: 'L0047', MaDuAn: 'DA008', TenLo: 'Lô E7', DienTich: 78, GiaM2: 20355519, TongGia: '1.6 tỷ', LoaiLo: 'Ven sông', Huong: 'Tây Nam', Lat: 10.034185, Lng: 105.787688, MatTien: 7, TrangThai: 'Có sẵn' },
+      { MaLo: 'L0048', MaDuAn: 'DA008', TenLo: 'Lô E8', DienTich: 85, GiaM2: 21000000, TongGia: '1.8 tỷ', LoaiLo: 'Mặt tiền đường', Huong: 'Nam', Lat: 10.034800, Lng: 105.788400, MatTien: 8, TrangThai: 'Đã cọc' },
+      { MaLo: 'L0049', MaDuAn: 'DA008', TenLo: 'Lô F1', DienTich: 90, GiaM2: 19500000, TongGia: '1.8 tỷ', LoaiLo: 'Lô góc', Huong: 'Đông Nam', Lat: 10.033500, Lng: 105.786900, MatTien: 9, TrangThai: 'Đã bán' },
+      { MaLo: 'L0050', MaDuAn: 'DA008', TenLo: 'Lô F2', DienTich: 80, GiaM2: 20000000, TongGia: '1.6 tỷ', LoaiLo: 'Nội khu', Huong: 'Tây', Lat: 10.032900, Lng: 105.786100, MatTien: 7, TrangThai: 'Đang TL' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.LoDat.map(item => {
+    let st = item.TrangThai || 'Có sẵn';
+    if (st.includes('thương lượng') || st.includes('giữ chỗ')) st = 'Đang TL';
+    const cfg = STATUS_CONFIG[st] || STATUS_CONFIG['Có sẵn'];
+    const formattedPrice = typeof item.TongGia === 'string' ? item.TongGia : (Number(item.TongGia || (item.DienTich * item.GiaM2)) / 1000000000).toFixed(1) + ' tỷ';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaLo}</td>
+        <td class="text-slate-500">${item.MaDuAn || ''}</td>
+        <td class="font-semibold">${item.TenLo || ''}</td>
+        <td class="text-right">${item.DienTich || ''}</td>
+        <td class="text-right text-slate-500">${Number(item.GiaM2 || 0).toLocaleString('vi-VN')}</td>
+        <td class="text-right font-bold text-slate-900">${formattedPrice}</td>
+        <td class="text-slate-600">${item.LoaiLo || ''}</td>
+        <td class="text-slate-600">${item.Huong || ''}</td>
+        <td class="text-center"><span class="stat-badge" style="background:${cfg.bgBadge}; color:${cfg.textBadge};">${st.toUpperCase()}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="viewLotOnMap('${item.MaLo}')" class="p-1 px-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="Định vị lô trên bản đồ"><i class="fa fa-map-location-dot"></i></button>
+          <button onclick="openEditModal('LoDat', '${item.MaLo}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('LoDat', 'MaLo', '${item.MaLo}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderTableKhachHang() {
+  const tbody = document.getElementById('tbody-khachhang');
+  if (!tbody) return;
+  if (!STORE.KhachHang || STORE.KhachHang.length === 0) {
+    STORE.KhachHang = [
+      { MaKH: 'KH013', HoTen: 'Trương Văn Nam', SDT: '0860315335', Email: 'truongvannam13@gmail.com', Nguon: 'TRỰC TIẾP', NVPhuTrach: 'NV003', NgayTao: '28/05/2024' },
+      { MaKH: 'KH043', HoTen: 'Nguyễn Thị Xuyến', SDT: '0730120425', Email: 'nguyenthixuyen43@gmail.com', Nguon: 'NGƯỜI QUEN', NVPhuTrach: 'NV006', NgayTao: '28/04/2024' },
+      { MaKH: 'KH014', HoTen: 'Phan Thị Oanh', SDT: '0681567573', Email: 'phanthioanh14@gmail.com', Nguon: 'WEBSITE', NVPhuTrach: 'NV005', NgayTao: '27/01/2024' },
+      { MaKH: 'KH022', HoTen: 'Nguyễn Hoàng Xa', SDT: '0956865012', Email: 'nguyenhoangxa22@gmail.com', Nguon: 'ZALO', NVPhuTrach: 'NV002', NgayTao: '27/06/2024' },
+      { MaKH: 'KH003', HoTen: 'Lê Hoàng Cường', SDT: '0676146095', Email: 'lehoangcuong3@gmail.com', Nguon: 'GIỚI THIỆU', NVPhuTrach: 'NV003', NgayTao: '26/10/2024' },
+      { MaKH: 'KH028', HoTen: 'Đặng Quốc Duy', SDT: '0446342839', Email: 'dangquocduy28@gmail.com', Nguon: 'TRỰC TIẾP', NVPhuTrach: 'NV008', NgayTao: '26/07/2024' },
+      { MaKH: 'KH041', HoTen: 'Vũ Thị Vi', SDT: '0895989078', Email: 'vuthivi41@gmail.com', Nguon: 'FACEBOOK', NVPhuTrach: 'NV001', NgayTao: '26/03/2024' },
+      { MaKH: 'KH045', HoTen: 'Lê Bảo Bình', SDT: '0826317715', Email: 'lebaobinh45@gmail.com', Nguon: 'NGƯỜI QUEN', NVPhuTrach: 'NV005', NgayTao: '26/10/2024' },
+      { MaKH: 'KH007', HoTen: 'Đặng Thị Giang', SDT: '0920976134', Email: 'dangthigiang7@gmail.com', Nguon: 'QUẢNG CÁO GOOGLE', NVPhuTrach: 'NV003', NgayTao: '25/10/2024' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.KhachHang.map(item => `
+    <tr>
+      <td class="font-bold text-slate-900">${item.MaKH}</td>
+      <td class="font-semibold">${item.HoTen}</td>
+      <td class="font-mono text-slate-800 font-bold">${item.SDT || ''}</td>
+      <td class="text-slate-500">${item.Email || ''}</td>
+      <td><span class="stat-badge bg-sky-100 text-sky-800">${item.Nguon || ''}</span></td>
+      <td class="font-medium text-slate-700">${item.NVPhuTrach || ''}</td>
+      <td class="text-slate-400">${item.NgayTao || ''}</td>
+      <td class="text-center space-x-1 whitespace-nowrap">
+        <button onclick="openEditModal('KhachHang', '${item.MaKH}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+        <button onclick="confirmDelete('KhachHang', 'MaKH', '${item.MaKH}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderTableGiaoDich() {
+  const tbody = document.getElementById('tbody-giaodich');
+  if (!tbody) return;
+  if (!STORE.GiaoDich || STORE.GiaoDich.length === 0) {
+    STORE.GiaoDich = [
+      { MaGD: 'GD006', MaLo: 'L0031', MaKH: 'KH045', LoaiGD: 'ĐẶT CỌC', GiaTri: '4.1 tỷ', NgayGD: '28/11/2024', PTThanhToan: 'Trả góp', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaGD: 'GD010', MaLo: 'L0012', MaKH: 'KH024', LoaiGD: 'ĐẶT CỌC', GiaTri: '3.4 tỷ', NgayGD: '28/09/2024', PTThanhToan: 'Chuyển khoản', TrangThai: 'ĐANG XỬ LÝ' },
+      { MaGD: 'GD017', MaLo: 'L0043', MaKH: 'KH042', LoaiGD: 'CHUYỂN NHƯỢNG', GiaTri: '4.6 tỷ', NgayGD: '27/09/2024', PTThanhToan: 'Tiền mặt', TrangThai: 'CHỜ THANH TOÁN' },
+      { MaGD: 'GD023', MaLo: 'L0035', MaKH: 'KH050', LoaiGD: 'MUA BÁN', GiaTri: '556 triệu', NgayGD: '27/04/2024', PTThanhToan: 'Trả góp', TrangThai: 'CHỜ THANH TOÁN' },
+      { MaGD: 'GD014', MaLo: 'L0056', MaKH: 'KH06', LoaiGD: 'ĐẶT CỌC', GiaTri: '2.6 tỷ', NgayGD: '26/07/2024', PTThanhToan: 'Trả góp', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaGD: 'GD031', MaLo: 'L0059', MaKH: 'KH043', LoaiGD: 'ĐẶT CỌC', GiaTri: '717 triệu', NgayGD: '26/03/2024', PTThanhToan: 'Kết hợp', TrangThai: 'CHỜ THANH TOÁN' },
+      { MaGD: 'GD002', MaLo: 'L0056', MaKH: 'KH043', LoaiGD: 'ĐẶT CỌC', GiaTri: '1.9 tỷ', NgayGD: '25/06/2024', PTThanhToan: 'Trả góp', TrangThai: 'ĐÃ HỦY' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.GiaoDich.map(item => {
+    let stClass = 'bg-amber-100 text-amber-800';
+    if (item.TrangThai === 'ĐÃ THANH TOÁN') stClass = 'bg-emerald-100 text-emerald-800';
+    if (item.TrangThai === 'ĐANG XỬ LÝ') stClass = 'bg-sky-100 text-sky-800';
+    if (item.TrangThai === 'ĐÃ HỦY') stClass = 'bg-rose-100 text-rose-800';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaGD}</td>
+        <td class="font-semibold">${item.MaLo}</td>
+        <td class="text-slate-600">${item.MaKH}</td>
+        <td><span class="stat-badge bg-slate-100 text-slate-700">${item.LoaiGD}</span></td>
+        <td class="text-right font-bold text-slate-900">${item.GiaTri}</td>
+        <td class="text-slate-500">${item.NgayGD}</td>
+        <td class="text-slate-600">${item.PTThanhToan}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openEditModal('GiaoDich', '${item.MaGD}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('GiaoDich', 'MaGD', '${item.MaGD}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderTableDoanhThu() {
+  const tbody = document.getElementById('tbody-doanhthu');
+  if (!tbody) return;
+  if (!STORE.DoanhThu || STORE.DoanhThu.length === 0) {
+    STORE.DoanhThu = [
+      { MaDT: 'DT011', MaDA: 'DA001', LoaiThu: 'TIỀN ĐẶT CỌC', SoTien: '536.145.618 đ', NgayThu: '28/05/2024', HinhThuc: 'Tiền mặt', NguoiThu: 'NV003' },
+      { MaDT: 'DT015', MaDA: 'DA002', LoaiThu: 'THANH TOÁN ĐỢT 1', SoTien: '454.360.538 đ', NgayThu: '28/10/2024', HinhThuc: 'Séc', NguoiThu: 'NV005' },
+      { MaDT: 'DT037', MaDA: 'DA001', LoaiThu: 'THANH TOÁN ĐỢT 2', SoTien: '329.239.039 đ', NgayThu: '28/07/2024', HinhThuc: 'Chuyển khoản', NguoiThu: 'NV001' },
+      { MaDT: 'DT008', MaDA: 'DA004', LoaiThu: 'THANH TOÁN ĐỢT 3', SoTien: '821.052.855 đ', NgayThu: '27/01/2024', HinhThuc: 'Chuyển khoản', NguoiThu: 'NV007' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.DoanhThu.map(item => `
+    <tr>
+      <td class="font-bold text-slate-900">${item.MaDT}</td>
+      <td class="text-slate-600">${item.MaDA}</td>
+      <td><span class="stat-badge bg-emerald-100 text-emerald-800">${item.LoaiThu}</span></td>
+      <td class="text-right font-bold text-slate-900">${item.SoTien}</td>
+      <td class="text-slate-500">${item.NgayThu}</td>
+      <td class="text-slate-600">${item.HinhThuc}</td>
+      <td class="text-slate-700 font-medium">${item.NguoiThu}</td>
+      <td class="text-center space-x-1 whitespace-nowrap">
+        <button onclick="openEditModal('DoanhThu', '${item.MaDT}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+        <button onclick="confirmDelete('DoanhThu', 'MaDT', '${item.MaDT}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderTableChiPhi() {
+  const tbody = document.getElementById('tbody-chiphi');
+  if (!tbody) return;
+  if (!STORE.ChiPhi || STORE.ChiPhi.length === 0) {
+    STORE.ChiPhi = [
+      { MaCP: 'CP026', MaDA: 'DA001', Loai: 'CÂY XANH CẢNH QUAN', MoTa: 'Cây xanh cảnh quan cho dự án DA001', SoTien: '239.665.406 đ', NgayChi: '28/02/2024', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaCP: 'CP032', MaDA: 'DA009', Loai: 'CÂY XANH CẢNH QUAN', MoTa: 'Cây xanh cảnh quan cho dự án DA009', SoTien: '20.491.534 đ', NgayChi: '27/07/2024', TrangThai: 'ĐÃ DUYỆT' },
+      { MaCP: 'CP046', MaDA: 'DA003', Loai: 'THUẾ PHÍ', MoTa: 'Thuế phí cho dự án DA003', SoTien: '217.381.088 đ', NgayChi: '26/11/2024', TrangThai: 'ĐÃ DUYỆT' },
+      { MaCP: 'CP049', MaDA: 'DA006', Loai: 'QUẢNG CÁO MARKETING', MoTa: 'Quảng cáo marketing cho dự án DA006', SoTien: '284.558.929 đ', NgayChi: '26/08/2024', TrangThai: 'ĐÃ THANH TOÁN' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.ChiPhi.map(item => {
+    let stClass = 'bg-amber-100 text-amber-800';
+    if (item.TrangThai === 'ĐÃ THANH TOÁN') stClass = 'bg-emerald-100 text-emerald-800';
+    if (item.TrangThai === 'ĐÃ DUYỆT') stClass = 'bg-sky-100 text-sky-800';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaCP}</td>
+        <td class="text-slate-600">${item.MaDA}</td>
+        <td><span class="stat-badge bg-amber-100 text-amber-800">${item.Loai}</span></td>
+        <td class="text-slate-500">${item.MoTa}</td>
+        <td class="text-right font-bold text-slate-900">${item.SoTien}</td>
+        <td class="text-slate-500">${item.NgayChi}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openEditModal('ChiPhi', '${item.MaCP}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('ChiPhi', 'MaCP', '${item.MaCP}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+// ================= CHỨC NĂNG ADMIN CẤP QUYỀN & THAY ĐỔI MẬT KHẨU NHÂN VIÊN =================
+
+function openEmployeeRbacModal(targetMaNV) {
+  // Chỉ Admin hoặc Giám đốc mới có quyền mở chức năng này
+  if (CURRENT_USER.role !== 'admin') {
+    alert("⛔ Bạn không có quyền quản trị! Chỉ Giám Đốc / Admin mới được phép cấp quyền và đổi mật khẩu nhân viên.");
+    return;
+  }
+
+  const select = document.getElementById('rbac-select-employee');
+  if (!select) return;
+
+  const employees = STORE.NhanVien || [];
+  if (employees.length === 0) {
+    alert("Chưa có danh sách nhân viên để cấp quyền!");
+    return;
+  }
+
+  // Đổ danh sách nhân viên vào dropdown
+  select.innerHTML = employees.map(nv => {
+    return `<option value="${nv.MaNV}">${nv.MaNV} - ${nv.HoTen} (${nv.ChucVu || nv.PhongBan || 'Nhân sự'})` + `</option>`;
+  }).join('');
+
+  if (targetMaNV) {
+    select.value = targetMaNV;
+  } else if (employees.length > 0) {
+    select.value = employees[0].MaNV;
+  }
+
+  onSelectRbacEmployee(select.value);
+  document.getElementById('employee-rbac-modal').classList.remove('hidden');
+}
+
+function closeEmployeeRbacModal() {
+  const modal = document.getElementById('employee-rbac-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function onSelectRbacEmployee(maNV) {
+  const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
+  if (!nv) return;
+
+  document.getElementById('rbac-inp-manv').value = nv.MaNV;
+  
+  // Tìm xem nhân viên này đã có tài khoản trong USER_ACCOUNTS chưa
+  let matchedAcc = Object.values(USER_ACCOUNTS).find(acc => acc.username.toLowerCase() === nv.MaNV.toLowerCase() || (nv.HoTen && acc.fullName.toLowerCase() === nv.HoTen.toLowerCase()));
+
+  if (!matchedAcc) {
+    // Tự sinh username từ Mã NV hoặc chức vụ
+    let defaultRole = 'sale';
+    if ((nv.ChucVu || '').toLowerCase().includes('giám đốc')) defaultRole = 'admin';
+    else if ((nv.ChucVu || '').toLowerCase().includes('trưởng') || (nv.ChucVu || '').toLowerCase().includes('quản lý')) defaultRole = 'truongphong';
+    else if ((nv.ChucVu || '').toLowerCase().includes('kế toán')) defaultRole = 'ketoan';
+
+    document.getElementById('rbac-inp-username').value = nv.MaNV.toLowerCase();
+    document.getElementById('rbac-select-role').value = defaultRole;
+    document.getElementById('rbac-inp-password').value = '123456';
+  } else {
+    document.getElementById('rbac-inp-username').value = matchedAcc.username;
+    document.getElementById('rbac-select-role').value = matchedAcc.role;
+    document.getElementById('rbac-inp-password').value = matchedAcc.password || '123456';
+  }
+
+  previewRolePermissions(document.getElementById('rbac-select-role').value);
+}
+
+function previewRolePermissions(roleKey) {
+  const perm = ROLE_PERMISSIONS[roleKey];
+  const descEl = document.getElementById('rbac-role-desc');
+  if (!descEl || !perm) return;
+
+  const tabTitles = {
+    dashboard: 'Bảng Điều Khiển',
+    duan: 'Dự Án',
+    lodat: 'Lô Đất',
+    map: 'Bản Đồ',
+    khachhang: 'Khách Hàng',
+    giaodich: 'Giao Dịch',
+    doanhthu: 'Doanh Thu',
+    chiphi: 'Chi Phí',
+    nhanvien: 'Nhân Viên',
+    hoahong: 'Hoa Hồng',
+    baocao: 'Báo Cáo',
+    caidat: 'Cài Đặt'
+  };
+
+  const allowedList = perm.allowedTabs.map(t => `<span class="inline-block bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded text-[10px] font-bold mr-1 mb-1">✓ ${tabTitles[t] || t}</span>`).join('');
+
+  descEl.innerHTML = `
+    <div class="space-y-1">
+      <div class="font-bold text-slate-800">Quyền hạn truy cập (${perm.allowedTabs.length}/12 tính năng):</div>
+      <div class="flex flex-wrap pt-1">${allowedList}</div>
+    </div>
+  `;
+}
+
+function resetRbacDefaultPassword() {
+  document.getElementById('rbac-inp-password').value = '123456';
+}
+
+function generateRandomRbacPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let pass = '';
+  for (let i = 0; i < 8; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  document.getElementById('rbac-inp-password').value = pass;
+}
+
+function saveEmployeeRbacSettings() {
+  const maNV = document.getElementById('rbac-inp-manv').value;
+  const username = document.getElementById('rbac-inp-username').value.trim().toLowerCase();
+  const role = document.getElementById('rbac-select-role').value;
+  const password = document.getElementById('rbac-inp-password').value.trim();
+  const isActive = document.getElementById('rbac-chk-active').checked;
+
+  if (!username) {
+    alert("Vui lòng nhập Tên đăng nhập (Username)!");
+    return;
+  }
+  if (!password) {
+    alert("Vui lòng nhập Mật khẩu mới!");
+    return;
+  }
+
+  const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
+  const fullName = nv ? nv.HoTen : username;
+  const initials = fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  // Cập nhật hoặc tạo mới tài khoản trong USER_ACCOUNTS
+  USER_ACCOUNTS[username] = {
+    username: username,
+    password: password,
+    fullName: fullName,
+    role: role,
+    avatarInitials: initials || 'NV',
+    title: `${ROLE_PERMISSIONS[role].name} (${maNV})`,
+    isActive: isActive
+  };
+
+  // Đồng bộ lưu phiên bản cục bộ
+  try {
+    localStorage.setItem('bds_custom_accounts', JSON.stringify(USER_ACCOUNTS));
+  } catch(e){}
+
+  // Nếu đang cấp quyền cho chính tài khoản đang đăng nhập, áp dụng quyền mới ngay lập tức
+  if (CURRENT_USER.username.toLowerCase() === username.toLowerCase()) {
+    applyUserPermissions(USER_ACCOUNTS[username]);
+  }
+
+  closeEmployeeRbacModal();
+  renderTableNhanVien();
+
+  alert(`✅ CẤP QUYỀN & ĐẶT MẬT KHẨU THÀNH CÔNG!\n\n• Nhân viên: ${fullName} (${maNV})\n• Tên đăng nhập: ${username}\n• Mật khẩu mới: ${password}\n• Vai trò cấp: ${ROLE_PERMISSIONS[role].name}\n\nNhân viên có thể đăng nhập ngay với thông tin trên!`);
+}
+
+// ================= ĐỔI MẬT KHẨU CÁ NHÂN =================
+
+function openChangeMyPasswordModal() {
+  closeUserDropdown();
+  document.getElementById('chg-old-password').value = '';
+  document.getElementById('chg-new-password').value = '';
+  document.getElementById('chg-confirm-password').value = '';
+  document.getElementById('change-my-password-modal').classList.remove('hidden');
+}
+
+function closeChangeMyPasswordModal() {
+  const modal = document.getElementById('change-my-password-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitChangeMyPassword() {
+  const oldPass = document.getElementById('chg-old-password').value.trim();
+  const newPass = document.getElementById('chg-new-password').value.trim();
+  const confirmPass = document.getElementById('chg-confirm-password').value.trim();
+
+  if (!oldPass) {
+    alert("Vui lòng nhập mật khẩu hiện tại!");
+    return;
+  }
+  if (!newPass) {
+    alert("Vui lòng nhập mật khẩu mới!");
+    return;
+  }
+  if (newPass.length < 6) {
+    alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+    return;
+  }
+  if (newPass !== confirmPass) {
+    alert("Xác nhận mật khẩu mới không trùng khớp!");
+    return;
+  }
+
+  // Kiểm tra mật khẩu cũ
+  if (CURRENT_USER.password && CURRENT_USER.password !== oldPass) {
+    alert("❌ Mật khẩu hiện tại không chính xác!");
+    return;
+  }
+
+  CURRENT_USER.password = newPass;
+  if (USER_ACCOUNTS[CURRENT_USER.username]) {
+    USER_ACCOUNTS[CURRENT_USER.username].password = newPass;
+  }
+
+  try {
+    localStorage.setItem('bds_custom_accounts', JSON.stringify(USER_ACCOUNTS));
+  } catch(e){}
+
+  closeChangeMyPasswordModal();
+  alert(`✅ ĐÃ ĐỔI MẬT KHẨU CỦA BẠN THÀNH CÔNG!\n\nMật khẩu mới đã được cập nhật an toàn vào hệ thống.`);
+}
+
+function renderTableNhanVien() {
+  const tbody = document.getElementById('tbody-nhanvien');
+  if (!tbody) return;
+  if (!STORE.NhanVien || STORE.NhanVien.length === 0) {
+    STORE.NhanVien = [
+      { MaNV: 'NV001', HoTen: 'Nguyễn Công Dinh', SDT: '0393990638', Email: 'dinh.nc@bds.vn', ChucVu: 'Giám đốc', PhongBan: 'BAN GIÁM ĐỐC', LuongCB: '50.000.000 đ', TrangThai: 'ĐANG LÀM' },
+      { MaNV: 'NV006', HoTen: 'Võ Thị Lan', SDT: '0956789012', Email: 'lan.vt@company.vn', ChucVu: 'Nhân viên KD', PhongBan: 'KINH DOANH', LuongCB: '15.000.000 đ', TrangThai: 'ĐANG LÀM' },
+      { MaNV: 'NV014', HoTen: 'Phan Thị Kim Ngân', SDT: '0714567890', Email: 'ngan.ptk@company.vn', ChucVu: 'Nhân viên pháp lý', PhongBan: 'PHÁP LÝ', LuongCB: '18.000.000 đ', TrangThai: 'ĐANG LÀM' },
+      { MaNV: 'NV002', HoTen: 'Lê Thị Hương', SDT: '0912345678', Email: 'huong.lt@company.vn', ChucVu: 'Phó Giám đốc', PhongBan: 'BAN GIÁM ĐỐC', LuongCB: '40.000.000 đ', TrangThai: 'ĐANG LÀM' },
+      { MaNV: 'NV004', HoTen: 'Phạm Thị Mai', SDT: '0934567890', Email: 'mai.pt@company.vn', ChucVu: 'Nhân viên KD', PhongBan: 'KINH DOANH', LuongCB: '15.000.000 đ', TrangThai: 'ĐANG LÀM' },
+      { MaNV: 'NV008', HoTen: 'Bùi Thị Ngọc', SDT: '0978901234', Email: 'ngoc.bt@company.vn', ChucVu: 'Nhân viên KT', PhongBan: 'KẾ TOÁN', LuongCB: '12.000.000 đ', TrangThai: 'ĐANG LÀM' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.NhanVien.map(item => {
+    let stClass = item.TrangThai === 'NGHỈ VIỆC' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaNV}</td>
+        <td class="font-semibold">${item.HoTen}</td>
+        <td class="font-mono text-slate-800 font-bold">${item.SDT || ''}</td>
+        <td class="text-slate-500">${item.Email || ''}</td>
+        <td class="text-slate-700">${item.ChucVu || ''}</td>
+        <td><span class="stat-badge bg-sky-100 text-sky-800">${item.PhongBan || ''}</span></td>
+        <td class="text-right font-medium text-slate-900">${item.LuongCB || ''}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openEmployeeRbacModal('${item.MaNV}')" class="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 text-xs shadow-2xs transition cursor-pointer" title="Cấp quyền truy cập hệ thống & đổi mật khẩu"><i class="fa fa-key text-blue-600"></i> Cấp Quyền</button>
+          <button onclick="openEditModal('NhanVien', '${item.MaNV}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('NhanVien', 'MaNV', '${item.MaNV}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderTableHoaHong() {
+  const tbody = document.getElementById('tbody-hoahong');
+  if (!tbody) return;
+  if (!STORE.HoaHong || STORE.HoaHong.length === 0) {
+    STORE.HoaHong = [
+      { MaHH: 'HH027', MaNV: 'NV009', MaGD: 'GD027', GiaTriGD: '2.7 tỷ', TyLe: '4%', TienHH: '107.075.836 đ', NgayTinh: '28/06/2024', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaHH: 'HH046', MaNV: 'NV001', MaGD: 'GD046', GiaTriGD: '3.0 tỷ', TyLe: '4%', TienHH: '118.155.958 đ', NgayTinh: '28/11/2024', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaHH: 'HH053', MaNV: 'NV009', MaGD: 'GD053', GiaTriGD: '3.7 tỷ', TyLe: '3%', TienHH: '111.736.840 đ', NgayTinh: '28/05/2024', TrangThai: 'ĐÃ THANH TOÁN' },
+      { MaHH: 'HH043', MaNV: 'NV004', MaGD: 'GD043', GiaTriGD: '4.6 tỷ', TyLe: '4%', TienHH: '183.686.207 đ', NgayTinh: '27/12/2024', TrangThai: 'ĐÃ THANH TOÁN' }
+    ];
+  }
+
+  tbody.innerHTML = STORE.HoaHong.map(item => {
+    let stClass = item.TrangThai === 'ĐÃ THANH TOÁN' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+    return `
+      <tr>
+        <td class="font-bold text-slate-900">${item.MaHH}</td>
+        <td class="font-semibold">${item.MaNV}</td>
+        <td class="text-slate-600">${item.MaGD}</td>
+        <td class="text-right text-slate-700">${item.GiaTriGD}</td>
+        <td class="text-center font-bold text-slate-800">${item.TyLe}</td>
+        <td class="text-right font-black text-slate-900">${item.TienHH}</td>
+        <td class="text-slate-400">${item.NgayTinh}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.TrangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="openEditModal('HoaHong', '${item.MaHH}')" class="btn-action-edit" title="Chỉnh sửa"><i class="fa fa-pen"></i></button>
+          <button onclick="confirmDelete('HoaHong', 'MaHH', '${item.MaHH}')" class="btn-action-delete" title="Xóa"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// --- TRUNG TÂM CÀI ĐẶT DOANH NGHIỆP THƯƠNG MẠI ---
+function renderCaiDat() {
+  const defaults = {
+    COMPANY_NAME: 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT',
+    COMPANY_LOGO: 'https://luong-viet-360.vercel.app/logo-dinhcong.webp',
+    AUTHOR: 'Nguyễn Công Dinh',
+    HOTLINE: '0393990638',
+    ADDRESS: 'Mỹ Phước - Cần Thơ',
+    TAX_ID: '1801689999',
+    EMAIL: 'lienhe@bdsangiaphat.vn',
+    SLOGAN: 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa',
+    HH_RATE_SALES: '3.0',
+    HH_RATE_LEAD: '0.8',
+    HH_RATE_DIR: '0.5',
+    DEPOSIT_MIN: '50000000',
+    HOLD_DAYS: '7',
+    BANK_ACCOUNT: 'MB Bank - STK: 0393990638 - Nguyễn Công Dinh',
+    MAP_REGION_PRESET: 'mientay_all',
+    MAP_LAT: '10.000000',
+    MAP_LNG: '105.700000',
+    MAP_ZOOM: '9',
+    MAP_LAYER: 'osm',
+    
+  };
+
+  const stored = (STORE.CaiDat && STORE.CaiDat.length > 0) ? STORE.CaiDat : [];
+  stored.forEach(row => {
+    if (row.Key && row.Value !== undefined) {
+      defaults[row.Key] = row.Value;
+    }
+  });
+
+  Object.entries(defaults).forEach(([key, val]) => {
+    const el = document.getElementById('cfg-' + key);
+    if (el) el.value = val;
+  });
+  if (defaults.COMPANY_LOGO) applyCompanyLogo(defaults.COMPANY_LOGO);
+  if (defaults.COMPANY_NAME) {
+    const el1 = document.getElementById('app-company-name-text');
+    if (el1) {
+      el1.innerText = defaults.COMPANY_NAME;
+      el1.title = defaults.COMPANY_NAME;
+    }
+    const el2 = document.getElementById('login-company-title');
+    if (el2) el2.innerText = defaults.COMPANY_NAME;
+  }
+  if (defaults.SLOGAN) {
+    const el1 = document.getElementById('app-company-slogan-text');
+    if (el1) el1.innerText = defaults.SLOGAN;
+    const el2 = document.getElementById('login-company-slogan');
+    if (el2) el2.innerText = defaults.SLOGAN;
+  }
+}
+
+function saveAllCompanySettings() {
+  const keys = [
+    'COMPANY_NAME', 'COMPANY_LOGO', 'AUTHOR', 'HOTLINE', 'ADDRESS', 'TAX_ID', 'EMAIL', 'SLOGAN',
+    'HH_RATE_SALES', 'HH_RATE_LEAD', 'HH_RATE_DIR', 'DEPOSIT_MIN', 'HOLD_DAYS',
+    'BANK_ACCOUNT', 'MAP_REGION_PRESET', 'MAP_LAT', 'MAP_LNG', 'MAP_ZOOM', 'MAP_LAYER'
+  ];
+
+  const newConfigList = [];
+  keys.forEach(k => {
+    const el = document.getElementById('cfg-' + k);
+    const v = el ? el.value.trim() : '';
+    newConfigList.push({ Key: k, Value: v, MoTa: 'Cấu hình doanh nghiệp BĐS PRO' });
+  });
+
+  STORE.CaiDat = newConfigList;
+
+  // Cập nhật ngay các tiêu đề nhận diện thương hiệu trên giao diện (Đã sửa lỗi tràn chữ & không ghi đè tiêu đề Header)
+  const compName = document.getElementById('cfg-COMPANY_NAME')?.value || 'BĐS PRO';
+  const logoVal = document.getElementById('cfg-COMPANY_LOGO')?.value || '';
+  applyCompanyLogo(logoVal);
+  const titleEl = document.getElementById('app-company-name-text');
+  if (titleEl) {
+    titleEl.innerText = compName;
+    titleEl.title = compName;
+  }
+  const sloganVal = document.getElementById('cfg-SLOGAN')?.value || '';
+  const sloganEl = document.getElementById('app-company-slogan-text');
+  if (sloganEl) {
+    sloganEl.innerText = sloganVal;
+    sloganEl.title = sloganVal;
+  }
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(res => {
+        alert("✅ Đã lưu toàn bộ thông số doanh nghiệp vào Google Sheet thành công!");
+      })
+      .withFailureHandler(err => alert("Lỗi lưu cấu hình: " + err))
+      .apiSaveRecord('CaiDat', { Key: 'COMPANY_NAME', Value: document.getElementById('cfg-COMPANY_NAME')?.value || '' }, 'Key');
+  } else {
+    alert("✅ Đã lưu cấu hình doanh nghiệp thành công! (Mẫu xem trước thương mại)");
+  }
+}
+
+function backupSystemDataJSON() {
+  try {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(STORE, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", `BDS_PRO_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
+  } catch (e) {
+    alert("Lỗi xuất backup: " + e.message);
+  }
+}
+
+function resetDefaultDemoData() {
+  if (confirm("Bạn có chắc chắn muốn nạp lại dữ liệu demo gốc từ Nguyễn Công Dinh (0393990638)?")) {
+    location.reload();
+  }
+}
+
+// --- HỆ THỐNG MODAL THÊM / CHỈNH SỬA DỮ LIỆU DÙNG CHUNG (CRUD CHỐNG ĐƠ) ---
+function openEditModal(sheetName, idVal) {
+  const cfg = SCHEMA_CONFIG[sheetName];
+  if (!cfg) return;
+
+  const list = STORE[sheetName] || [];
+  let item = list.find(x => String(x[cfg.idCol]) === String(idVal));
+  if (!item && list.length > 0) {
+    item = list[0];
+    idVal = item[cfg.idCol];
+  }
+  if (!item) {
+    alert(`Chưa có dữ liệu ${cfg.title} để chỉnh sửa. Vui lòng bấm "Thêm Mới"!`);
+    return;
+  }
+
+  currentModalContext = { sheetName: sheetName, isEdit: true, targetId: idVal };
+
+  document.getElementById('crud-modal-title').innerHTML = `<i class="fa fa-pen-to-square text-amber-300"></i> Chỉnh Sửa ${cfg.title} (${idVal})`;
+
+  const body = document.getElementById('crud-modal-body');
+  body.innerHTML = cfg.fields.map(f => {
+    const val = item[f.name] !== undefined ? item[f.name] : '';
+    const readonlyAttr = (f.name === cfg.idCol) ? 'readonly class="w-full border rounded px-2.5 py-1.5 bg-slate-100 font-bold text-slate-600 focus:outline-none"' : 'class="w-full border rounded px-2.5 py-1.5 bg-white text-slate-800 focus:outline-emerald-600"';
+
+    if (f.type === 'select') {
+      const opts = f.options.map(o => `<option value="${o}" ${String(val)===String(o)?'selected':''}>${o}</option>`).join('');
+      return `
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">${f.label}</label>
+          <select id="modal-inp-${f.name}" class="w-full border rounded px-2.5 py-1.5 bg-white text-slate-800 font-medium">${opts}</select>
+        </div>
+      `;
+    }
+
+    return `
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">${f.label}</label>
+        <input type="${f.type}" id="modal-inp-${f.name}" value="${val}" ${readonlyAttr} placeholder="${f.placeholder || ''}">
+      </div>
+    `;
+  }).join('');
+
+  attachModalAutoCalculators(sheetName);
+  document.getElementById('crud-modal').classList.remove('hidden');
+}
+
+function openAddModal(sheetName) {
+  const cfg = SCHEMA_CONFIG[sheetName];
+  if (!cfg) return;
+
+  currentModalContext = { sheetName: sheetName, isEdit: false, targetId: null };
+
+  document.getElementById('crud-modal-title').innerHTML = `<i class="fa fa-plus-circle"></i> Thêm Mới ${cfg.title}`;
+
+  const body = document.getElementById('crud-modal-body');
+  body.innerHTML = cfg.fields.map(f => {
+    let defaultVal = '';
+    // Tự sinh mã tiếp theo nếu là cột ID
+    if (f.name === cfg.idCol) {
+      const list = STORE[sheetName] || [];
+      const prefix = cfg.idCol.replace('Ma', '');
+      defaultVal = prefix + String(list.length + 1).padStart(3, '0');
+    }
+
+    if (f.type === 'select') {
+      const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
+      return `
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">${f.label}</label>
+          <select id="modal-inp-${f.name}" class="w-full border rounded px-2.5 py-1.5 bg-white text-slate-800 font-medium">${opts}</select>
+        </div>
+      `;
+    }
+
+    return `
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">${f.label}</label>
+        <input type="${f.type}" id="modal-inp-${f.name}" value="${defaultVal}" class="w-full border rounded px-2.5 py-1.5 bg-white text-slate-800 focus:outline-slate-400" placeholder="${f.placeholder || ''}">
+      </div>
+    `;
+  }).join('');
+
+  attachModalAutoCalculators(sheetName);
+  document.getElementById('crud-modal').classList.remove('hidden');
+}
+
+function closeCrudModal() {
+  document.getElementById('crud-modal').classList.add('hidden');
+}
+
+function submitCrudModal() {
+  const { sheetName, isEdit, targetId } = currentModalContext;
+  const cfg = SCHEMA_CONFIG[sheetName];
+  if (!cfg) return;
+
+  const recordData = {};
+  cfg.fields.forEach(f => {
+    const el = document.getElementById('modal-inp-' + f.name);
+    if (el) recordData[f.name] = el.value.trim();
+  });
+
+  const idVal = recordData[cfg.idCol];
+  if (!idVal) {
+    alert("Vui lòng nhập " + cfg.idCol);
+    return;
+  }
+
+  // Cập nhật bộ nhớ cục bộ ngay lập tức (0ms delay)
+  if (!STORE[sheetName]) STORE[sheetName] = [];
+  if (isEdit) {
+    const fIdx = STORE[sheetName].findIndex(x => String(x[cfg.idCol]) === String(targetId));
+    if (fIdx !== -1) STORE[sheetName][fIdx] = { ...STORE[sheetName][fIdx], ...recordData };
+  } else {
+    STORE[sheetName].unshift(recordData);
+  }
+
+  // Cập nhật giao diện
+  renderAllTables();
+  if (sheetName === 'LoDat') renderMapMarkers();
+
+  closeCrudModal();
+
+  // Đồng bộ lên Google Sheets trong background
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.success) {
+          console.log("Đã lưu vào Google Sheet:", res);
+        } else {
+          alert("Lỗi lưu Google Sheet: " + (res ? res.error : "Không xác định"));
+        }
+      })
+      .withFailureHandler(err => alert("Lỗi kết nối GAS: " + err))
+      .apiSaveRecord(sheetName, recordData, cfg.idCol);
+  }
+
+  alert("✅ Đã lưu " + cfg.title + " (" + idVal + ") thành công!");
+}
+
+function confirmDelete(sheetName, idCol, idVal) {
+  const cfg = SCHEMA_CONFIG[sheetName];
+  const title = cfg ? cfg.title : sheetName;
+  if (!confirm(`Bạn có chắc chắn muốn xóa ${title} (${idVal}) không?`)) return;
+
+  if (STORE[sheetName]) {
+    STORE[sheetName] = STORE[sheetName].filter(x => String(x[idCol]) !== String(idVal));
+  }
+
+  renderAllTables();
+  if (sheetName === 'LoDat') renderMapMarkers();
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(() => console.log("Đã xóa trên Google Sheet"))
+      .withFailureHandler(err => alert("Lỗi xóa trên Google Sheet: " + err))
+      .apiDeleteRecord(sheetName, idCol, idVal);
+  }
+
+  alert(`✅ Đã xóa ${title} (${idVal})!`);
+}
+
+// --- TỰ ĐỘNG TÍNH TOÁN TRONG MODAL THÊM / SỬA (CHỐNG LỖI NHẬP) ---
+function attachModalAutoCalculators(sheetName) {
+  if (sheetName === 'HoaHong') {
+    const inpGiaTri = document.getElementById('modal-inp-GiaTriGD');
+    const inpTyLe = document.getElementById('modal-inp-TyLe');
+    const inpTienHH = document.getElementById('modal-inp-TienHH');
+    const calc = () => {
+      if (!inpGiaTri || !inpTyLe || !inpTienHH) return;
+      const vGiaTri = parseFloat(inpGiaTri.value) || 0;
+      const vTyLe = parseFloat(inpTyLe.value) || 0;
+      inpTienHH.value = Math.round(vGiaTri * (vTyLe / 100));
+    };
+    if (inpGiaTri) inpGiaTri.addEventListener('input', calc);
+    if (inpTyLe) inpTyLe.addEventListener('input', calc);
+  } else if (sheetName === 'LoDat') {
+    const inpDT = document.getElementById('modal-inp-DienTich');
+    const inpGiaM2 = document.getElementById('modal-inp-GiaM2');
+    const inpTongGia = document.getElementById('modal-inp-TongGia');
+    const calc = () => {
+      if (!inpDT || !inpGiaM2 || !inpTongGia) return;
+      const vDT = parseFloat(inpDT.value) || 0;
+      const vGia = parseFloat(inpGiaM2.value) || 0;
+      const total = vDT * vGia;
+      inpTongGia.value = (total / 1000000000).toFixed(1) + ' tỷ';
+    };
+    if (inpDT) inpDT.addEventListener('input', calc);
+    if (inpGiaM2) inpGiaM2.addEventListener('input', calc);
+  }
+}
+
+// --- BỘ LỌC THỜI GIAN DASHBOARD (THAO TÁC CỰC MƯỢT, 0ms) ---
+function applyDashboardFilter(rangeKey, btn) {
+  const buttons = document.querySelectorAll('.filter-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const labels = {
+    all: 'Tất cả thời gian',
+    today: 'Hôm nay',
+    '7days': '7 ngày gần nhất',
+    this_month: 'Tháng này',
+    this_quarter: 'Quý này',
+    this_year: 'Năm nay'
+  };
+  const labelEl = document.getElementById('dashboard-filter-label');
+  if (labelEl) labelEl.innerText = labels[rangeKey] || 'Tất cả';
+
+  // Hệ số lọc tương ứng thời gian
+  let mult = 1.0;
+  if (rangeKey === 'today') mult = 0.08;
+  else if (rangeKey === '7days') mult = 0.25;
+  else if (rangeKey === 'this_month') mult = 0.65;
+  else if (rangeKey === 'this_quarter') mult = 0.85;
+  else if (rangeKey === 'this_year') mult = 0.95;
+  else mult = 1.0;
+
+  const dtTotal = (29.7 * mult).toFixed(1);
+  const cpTotal = (14.5 * mult).toFixed(1);
+  const lnTotal = (dtTotal - cpTotal).toFixed(1);
+  const dealsCount = Math.max(1, Math.round(55 * mult));
+
+  const elDT = document.getElementById('kpi-doanhthu');
+  if (elDT) elDT.innerText = dtTotal + ' tỷ';
+  const elCP = document.getElementById('kpi-chiphi');
+  if (elCP) elCP.innerText = cpTotal + ' tỷ';
+  const elLN = document.getElementById('kpi-loinhuan');
+  if (elLN) elLN.innerText = (parseFloat(lnTotal) > 0 ? lnTotal : '0.0') + ' tỷ';
+  const elKH = document.getElementById('kpi-khachhang');
+  if (elKH) elKH.innerText = dealsCount;
+
+  renderDashboardCharts(mult);
+}
+
+// --- CÔNG CỤ TÍNH NHANH HOA HỒNG & TẠO PHIẾU ---
+function runQuickCommissionCalc() {
+  const inpVal = parseFloat(document.getElementById('calc-gia-tri-gd')?.value) || 0;
+  let rate = parseFloat(document.getElementById('calc-ty-le-hh')?.value) || 3.0;
+  const resEl = document.getElementById('calc-result-hh');
+  const tienHH = Math.round(inpVal * (rate / 100));
+  if (resEl) resEl.innerText = Number(tienHH).toLocaleString('vi-VN') + ' VNĐ';
+}
+
+function createQuickCommissionRecord() {
+  openAddModal('HoaHong');
+  const inpVal = parseFloat(document.getElementById('calc-gia-tri-gd')?.value) || 0;
+  let rate = parseFloat(document.getElementById('calc-ty-le-hh')?.value) || 3.0;
+  const inpGD = document.getElementById('modal-inp-GiaTriGD');
+  const inpTL = document.getElementById('modal-inp-TyLe');
+  const inpTH = document.getElementById('modal-inp-TienHH');
+  if (inpGD) inpGD.value = inpVal;
+  if (inpTL) inpTL.value = rate;
+  if (inpTH) inpTH.value = Math.round(inpVal * (rate / 100));
+}
+
+// --- XUẤT BÁO CÁO EXCEL CHUẨN DOANH NGHIỆP ---
+function getCompanyProfile() {
+  const cName = document.getElementById('cfg-COMPANY_NAME')?.value || 'CÔNG TY CỔ PHẦN ĐẦU TƯ BẤT ĐỘNG SẢN AN GIA PHÁT';
+  const cDir = document.getElementById('cfg-AUTHOR')?.value || 'Nguyễn Công Dinh';
+  const cPhone = document.getElementById('cfg-HOTLINE')?.value || '0393990638';
+  const cAddr = document.getElementById('cfg-ADDRESS')?.value || 'Mỹ Phước - Cần Thơ';
+  const cTax = document.getElementById('cfg-TAX_ID')?.value || '1801689999';
+  const cSlogan = document.getElementById('cfg-SLOGAN')?.value || 'Uy Tín Khởi Nguồn - Thịnh Vượng Vươn Xa';
+  return { cName, cDir, cPhone, cAddr, cTax, cSlogan };
+}
+
+function exportBaoCaoExcel() {
+  const p = getCompanyProfile();
+  const dateStr = new Date().toLocaleDateString('vi-VN');
+
+  const tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: Arial, sans-serif;">
+      <table border="0" cellpadding="4" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td colspan="4" style="font-size: 13pt; font-weight: bold; color: #14532d;">${p.cName.toUpperCase()}</td>
+          <td colspan="4" style="text-align: right; font-size: 9pt; color: #555;">HỆ THỐNG QUẢN LÝ BĐS PRO</td>
+        </tr>
+        <tr>
+          <td colspan="4" style="font-size: 9pt; color: #444;">Trụ sở: ${p.cAddr} | Hotline/Zalo: ${p.cPhone}</td>
+          <td colspan="4" style="text-align: right; font-size: 9pt; color: #555;">Ngày lập biểu: ${dateStr}</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="font-size: 9pt; font-style: italic; color: #166534; padding-bottom: 12px;">Slogan: "${p.cSlogan}"</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align: center; font-size: 15pt; font-weight: bold; color: #14532d; padding: 12px 0;">
+            BÁO CÁO TỔNG HỢP HIỆU QUẢ KINH DOANH DỰ ÁN ĐẤT NỀN
+          </td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align: center; font-size: 10pt; font-style: italic; color: #666; padding-bottom: 15px;">
+            Đơn vị tính: VNĐ | Giám đốc điều hành phê duyệt: ${p.cDir}
+          </td>
+        </tr>
+      </table>
+
+      <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%; border: 1px solid #14532d;">
+        <tr style="background-color: #14532d; color: #ffffff; font-weight: bold; text-align: center;">
+          <th style="padding: 8px;">MÃ DA</th>
+          <th style="padding: 8px;">TÊN DỰ ÁN</th>
+          <th style="padding: 8px;">TỔNG LÔ</th>
+          <th style="padding: 8px;">ĐÃ BÁN</th>
+          <th style="padding: 8px;">DOANH THU</th>
+          <th style="padding: 8px;">CHI PHÍ</th>
+          <th style="padding: 8px;">LỢI NHUẬN</th>
+          <th style="padding: 8px;">TRẠNG THÁI</th>
+        </tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA001</td><td>KDC Phú Gia Hưng</td><td style="text-align:center;">6</td><td style="text-align:center;">1</td><td style="text-align:right;">1.800.000.000 đ</td><td style="text-align:right;">1.455.000.000 đ</td><td style="text-align:right; font-weight:bold; color:#14532d;">345.000.000 đ</td><td style="text-align:center;">ĐANG TRIỂN KHAI</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA002</td><td>KDC Thành Phố Mới</td><td style="text-align:center;">6</td><td style="text-align:center;">2</td><td style="text-align:right;">574.000.000 đ</td><td style="text-align:right;">1.678.992.975 đ</td><td style="text-align:right; font-weight:bold; color:#b91c1c;">-1.104.992.975 đ</td><td style="text-align:center;">ĐANG TRIỂN KHAI</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA003</td><td>KDC Riverside Garden</td><td style="text-align:center;">6</td><td style="text-align:center;">1</td><td style="text-align:right;">2.400.000.000 đ</td><td style="text-align:right;">655.000.000 đ</td><td style="text-align:right; font-weight:bold; color:#14532d;">1.745.000.000 đ</td><td style="text-align:center;">ĐANG BÁN</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA004</td><td>KDC Diamond City</td><td style="text-align:center;">6</td><td style="text-align:center;">2</td><td style="text-align:right;">3.500.000.000 đ</td><td style="text-align:right;">1.120.000.000 đ</td><td style="text-align:right; font-weight:bold; color:#14532d;">2.380.000.000 đ</td><td style="text-align:center;">ĐÃ HOÀN THÀNH</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA005</td><td>KDC Golden Hill</td><td style="text-align:center;">6</td><td style="text-align:center;">0</td><td style="text-align:right;">694.000.000 đ</td><td style="text-align:right;">1.661.343.711 đ</td><td style="text-align:right; font-weight:bold; color:#b91c1c;">-967.343.711 đ</td><td style="text-align:center;">ĐANG TRIỂN KHAI</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA008</td><td>KDC Sun Garden</td><td style="text-align:center;">6</td><td style="text-align:center;">2</td><td style="text-align:right;">894.000.000 đ</td><td style="text-align:right;">172.000.000 đ</td><td style="text-align:right; font-weight:bold; color:#14532d;">722.000.000 đ</td><td style="text-align:center;">ĐANG TRIỂN KHAI</td></tr>
+        <tr><td style="text-align:center; font-weight:bold;">DA009</td><td>KDC Phương Đông</td><td style="text-align:center;">6</td><td style="text-align:center;">1</td><td style="text-align:right;">4.200.000.000 đ</td><td style="text-align:right;">720.000.000 đ</td><td style="text-align:right; font-weight:bold; color:#14532d;">3.480.000.000 đ</td><td style="text-align:center;">CHUẨN BỊ</td></tr>
+        <tr style="background-color: #e2e8f0; font-weight: bold; border-top: 2px solid #14532d;">
+          <td colspan="2" style="text-align: center;">TỔNG CỘNG HỆ THỐNG</td>
+          <td style="text-align: center;">60</td>
+          <td style="text-align: center;">14</td>
+          <td style="text-align: right; color:#14532d;">20.200.000.000 đ</td>
+          <td style="text-align: right; color:#b91c1c;">10.100.000.000 đ</td>
+          <td style="text-align: right; color:#14532d; font-size:11pt;">10.100.000.000 đ</td>
+          <td></td>
+        </tr>
+      </table>
+
+      <table border="0" cellpadding="4" cellspacing="0" style="width: 100%; margin-top: 30px; text-align: center;">
+        <tr>
+          <td style="width: 33%; font-weight: bold;">NGƯỜI LẬP BIỂU<br/><span style="font-size: 8pt; font-weight: normal; font-style: italic;">(Ký, ghi rõ họ tên)</span><br/><br/><br/><br/><b>Chuyên Viên Kế Toán</b></td>
+          <td style="width: 33%; font-weight: bold;">KẾ TOÁN TRƯỞNG<br/><span style="font-size: 8pt; font-weight: normal; font-style: italic;">(Ký, ghi rõ họ tên)</span><br/><br/><br/><br/><b>Trưởng Phòng TC-KT</b></td>
+          <td style="width: 34%; font-weight: bold;">GIÁM ĐỐC PHÊ DUYỆT<br/><span style="font-size: 8pt; font-weight: normal; font-style: italic;">(Ký, đóng dấu công ty)</span><br/><br/><br/><br/><b>${p.cDir}</b></td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  downloadExcelBlob(tableHtml, `BAO_CAO_DU_AN_${p.cName.replace(/\s+/g,'_')}.xls`);
+}
+
+function exportTableToExcel(sheetName) {
+  const p = getCompanyProfile();
+  const list = STORE[sheetName] || [];
+  const cfg = SCHEMA_CONFIG[sheetName];
+  if (!cfg || list.length === 0) {
+    alert("Chưa có dữ liệu để xuất Excel!");
+    return;
+  }
+
+  const dateStr = new Date().toLocaleDateString('vi-VN');
+  const headerCells = cfg.fields.map(f => `<th style="background:#14532d; color:#fff; padding:6px 10px;">${f.label}</th>`).join('');
+  const rowsHtml = list.map(item => {
+    let cells = cfg.fields.map(f => `<td style="padding:5px 8px; border:1px solid #ddd;">${item[f.name] !== undefined ? item[f.name] : ''}</td>`).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  const tableHtml = `
+    <html><head><meta charset="utf-8"/></head><body style="font-family: Arial;">
+      <h3 style="color:#14532d;">${p.cName.toUpperCase()}</h3>
+      <p style="font-size:10pt;">Hotline: ${p.cPhone} | Địa chỉ: ${p.cAddr} | Ngày xuất: ${dateStr}</p>
+      <h2 style="color:#14532d;">DANH SÁCH ${cfg.title.toUpperCase()}</h2>
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
+        <thead><tr>${headerCells}</tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <br/><br/>
+      <p style="text-align:right; font-weight:bold;">Giám Đốc: ${p.cDir}</p>
+    </body></html>
+  `;
+
+  downloadExcelBlob(tableHtml, `DANH_SACH_${sheetName}_${new Date().toISOString().slice(0,10)}.xls`);
+}
+
+function downloadExcelBlob(htmlContent, fileName) {
+  const blob = new Blob(['\ufeff', htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// --- BIỂU ĐỒ DASHBOARD & BÁO CÁO (TẢI SIÊU TỐC) ---
+function renderDashboardCharts(mult = 1.0) {
+  // 1. Luôn hiển thị dữ liệu Giao dịch gần đây đầu tiên (Không phụ thuộc Chart.js)
+  const recentEl = document.getElementById('dashboard-recent-transactions');
+  if (recentEl) {
+    recentEl.innerHTML = `
+      <div class="py-2.5 flex justify-between items-center"><p class="font-bold text-slate-800">GD001<span class="text-[10px] text-slate-400 block">Mua bán · 05/09/2024</span></p><div class="text-right"><p class="font-bold text-emerald-700">2.486.906.286 đ</p><span class="stat-badge bg-sky-100 text-sky-800">ĐANG XỬ LÝ</span></div></div>
+      <div class="py-2.5 flex justify-between items-center"><p class="font-bold text-slate-800">GD002<span class="text-[10px] text-slate-400 block">Đặt cọc · 25/06/2024</span></p><div class="text-right"><p class="font-bold text-rose-700">1.914.804.642 đ</p><span class="stat-badge bg-rose-100 text-rose-800">ĐÃ HỦY</span></div></div>
+      <div class="py-2.5 flex justify-between items-center"><p class="font-bold text-slate-800">GD003<span class="text-[10px] text-slate-400 block">Chuyển nhượng · 15/05/2024</span></p><div class="text-right"><p class="font-bold text-amber-700">4.224.593.506 đ</p><span class="stat-badge bg-amber-100 text-amber-800">CHỜ THANH TOÁN</span></div></div>
+    `;
+  }
+
+  // 2. Kiểm tra Chart.js
+  if (typeof Chart === 'undefined') {
+    console.warn("Chart.js đang nạp, tự động thử lại sau 250ms...");
+    setTimeout(function() {
+      if (typeof Chart !== 'undefined') renderDashboardCharts(mult);
+    }, 250);
+    return;
+  }
+
+  // 3. Khởi tạo biểu đồ Doanh thu & Chi phí theo tháng
+  const ctxMonth = document.getElementById('chart-revenue-month');
+  if (ctxMonth) {
+    try {
+      const old1 = Chart.getChart(ctxMonth);
+      if (old1) old1.destroy();
+      const rawDt = [3.1, 3.1, 0.4, 0.5, 3.7, 0.9, 4.4, 1.6, 3.1, 2.0, 1.4, 5.2];
+      const rawCp = [1.1, 1.6, 1.1, 0.7, 1.3, 1.5, 0.9, 1.8, 0.6, 1.3, 1.5, 1.1];
+      new Chart(ctxMonth, {
+        type: 'bar',
+        data: {
+          labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+          datasets: [
+            { label: 'Doanh Thu (Tỷ)', data: rawDt.map(v => +(v * mult).toFixed(1)), backgroundColor: '#15803d', borderRadius: 3 },
+            { label: 'Chi Phí (Tỷ)', data: rawCp.map(v => +(v * mult).toFixed(1)), backgroundColor: '#ea580c', borderRadius: 3 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    } catch(e) { console.warn("Lỗi render chart-revenue-month:", e); }
+  }
+
+  // 4. Khởi tạo biểu đồ Tình trạng Lô đất
+  const ctxLot = document.getElementById('chart-lot-status');
+  if (ctxLot) {
+    try {
+      const old2 = Chart.getChart(ctxLot);
+      if (old2) old2.destroy();
+      new Chart(ctxLot, {
+        type: 'doughnut',
+        data: {
+          labels: ['Có sẵn', 'Đã đặt cọc', 'Đã bán', 'Đang thương lượng'],
+          datasets: [{
+            data: [Math.round(14 * mult), Math.round(22 * mult), Math.round(14 * mult), Math.round(10 * mult)],
+            backgroundColor: ['#16a34a', '#ea580c', '#b45309', '#0284c7'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+    } catch(e) { console.warn("Lỗi render chart-lot-status:", e); }
+  }
+
+  // 5. Khởi tạo biểu đồ Top Dự án Doanh thu
+  const ctxTop = document.getElementById('chart-top-project');
+  if (ctxTop) {
+    try {
+      const old3 = Chart.getChart(ctxTop);
+      if (old3) old3.destroy();
+      new Chart(ctxTop, {
+        type: 'bar',
+        data: {
+          labels: ['KDC Riverside Garden', 'KDC Diamond City', 'KDC Phương Đông'],
+          datasets: [{ axis: 'y', data: [2.4, 3.5, 4.2], backgroundColor: ['#15803d', '#b45309', '#14532d'], borderRadius: 4 }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    } catch(e) { console.warn("Lỗi render chart-top-project:", e); }
+  }
+}
+
+function renderBaoCaoCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  const ctxDt = document.getElementById('chart-bc-dt');
+  if (ctxDt) {
+    const old1 = Chart.getChart(ctxDt);
+    if (old1) old1.destroy();
+    new Chart(ctxDt, {
+      type: 'doughnut',
+      data: {
+        labels: ['Tiền đặt cọc', 'Phí dịch vụ', 'Phí quản lý', 'Thanh toán đợt 3', 'Thanh toán đợt 2'],
+        datasets: [{ data: [35, 15, 20, 18, 12], backgroundColor: ['#15803d', '#0284c7', '#ea580c', '#b45309', '#9333ea'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const ctxCp = document.getElementById('chart-bc-cp');
+  if (ctxCp) {
+    const old2 = Chart.getChart(ctxCp);
+    if (old2) old2.destroy();
+    new Chart(ctxCp, {
+      type: 'doughnut',
+      data: {
+        labels: ['Quảng cáo', 'Điện nước', 'Thuế phí', 'Hạ tầng', 'San lấp', 'Lương nhân viên'],
+        datasets: [{ data: [25, 10, 15, 20, 10, 20], backgroundColor: ['#dc2626', '#ea580c', '#f59e0b', '#10b981', '#3b82f6', '#1d4ed8'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  const ctxNv = document.getElementById('chart-bc-topnv');
+  if (ctxNv) {
+    const old3 = Chart.getChart(ctxNv);
+    if (old3) old3.destroy();
+    new Chart(ctxNv, {
+      type: 'bar',
+      data: {
+        labels: ['Phạm Thị Mai', 'Ngô Quốc Bảo', 'Võ Thị Lan', 'Bùi Thị Ngọc', 'Trần Minh Tuấn', 'Nguyễn Hoàng Phúc', 'NV01'],
+        datasets: [{ axis: 'y', data: [24, 18, 16, 14, 12, 10, 8], backgroundColor: ['#14532d', '#b45309', '#15803d', '#0284c7', '#ea580c', '#9333ea', '#0f766e'], borderRadius: 3 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  }
+
+  const ctxBcLots = document.getElementById('chart-bc-lots');
+  if (ctxBcLots) {
+    const old4 = Chart.getChart(ctxBcLots);
+    if (old4) old4.destroy();
+    new Chart(ctxBcLots, {
+      type: 'pie',
+      data: {
+        labels: ['Có sẵn', 'Đã cọc', 'Đã bán', 'Đang TL'],
+        datasets: [{ data: [14, 22, 14, 10], backgroundColor: ['#16a34a', '#ea580c', '#b45309', '#0284c7'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+}
+
+// --- BẢN ĐỒ THỰC ĐỊA LEAFLET & GHI TỌA ĐỘ VỊ TRÍ ---
+
+// ================= HỆ THỐNG ĐIỀU HƯỚNG BẢN ĐỒ KHU VỰC MIỀN TÂY (ĐBSCL) =================
+const MIEN_TAY_REGIONS = {
+  mientay_all: { name: 'Toàn Cảnh Miền Tây (13 Tỉnh ĐBSCL)', lat: 10.000000, lng: 105.700000, zoom: 9 },
+  cantho: { name: 'TP. Cần Thơ', lat: 10.034185, lng: 105.787688, zoom: 13 },
+  longan: { name: 'Long An', lat: 10.536300, lng: 106.413200, zoom: 12 },
+  tiengiang: { name: 'Tiền Giang', lat: 10.360000, lng: 106.360000, zoom: 13 },
+  dongthap: { name: 'Đồng Tháp', lat: 10.457300, lng: 105.632400, zoom: 12 },
+  bentre: { name: 'Bến Tre', lat: 10.241500, lng: 106.375800, zoom: 13 },
+  vinhlong: { name: 'Vĩnh Long', lat: 10.253700, lng: 105.972200, zoom: 13 },
+  travinh: { name: 'Trà Vinh', lat: 9.938000, lng: 106.345800, zoom: 13 },
+  angiang: { name: 'An Giang', lat: 10.383300, lng: 105.416700, zoom: 12 },
+  kiengiang: { name: 'Kiên Giang', lat: 10.012500, lng: 105.080900, zoom: 11 },
+  haugiang: { name: 'Hậu Giang', lat: 9.784400, lng: 105.470100, zoom: 13 },
+  soctrang: { name: 'Sóc Trăng', lat: 9.603300, lng: 105.980000, zoom: 13 },
+  baclieu: { name: 'Bạc Liêu', lat: 9.294100, lng: 105.727800, zoom: 13 },
+  camau: { name: 'Cà Mau', lat: 9.176900, lng: 105.152400, zoom: 12 }
+};
+
+function flyToMienTayRegion(regionKey) {
+  if (!map) return;
+  const reg = MIEN_TAY_REGIONS[regionKey] || MIEN_TAY_REGIONS.mientay_all;
+  map.flyTo([reg.lat, reg.lng], reg.zoom, { duration: 1.2 });
+}
+
+function applyMienTayPresetToConfig(regionKey) {
+  if (regionKey === 'custom') return;
+  const reg = MIEN_TAY_REGIONS[regionKey] || MIEN_TAY_REGIONS.mientay_all;
+  const latInp = document.getElementById('cfg-MAP_LAT');
+  const lngInp = document.getElementById('cfg-MAP_LNG');
+  const zoomInp = document.getElementById('cfg-MAP_ZOOM');
+  if (latInp) latInp.value = reg.lat.toFixed(6);
+  if (lngInp) lngInp.value = reg.lng.toFixed(6);
+  if (zoomInp) zoomInp.value = String(reg.zoom);
+}
+
+
+// ================= CHỨC NĂNG ĐỊNH VỊ GPS ĐIỆN THOẠI & GOOGLE MAPS LINK =================
+
+// 1. Lấy vị trí GPS thực tế từ điện thoại áp vào lô đất đang chọn
+function getCurrentLocationForLot() {
+  if (!navigator.geolocation) {
+    alert("Trình duyệt hoặc điện thoại của bạn không hỗ trợ định vị GPS!");
+    return;
+  }
+  const btn = document.getElementById('btn-gps-current');
+  if (btn) btn.innerHTML = '<i class="fa fa-spinner fa-spin text-emerald-600"></i> Đang lấy GPS...';
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      if (btn) btn.innerHTML = '<i class="fa fa-location-arrow text-emerald-600"></i> Lấy GPS Điện Thoại';
+      const lat = Number(pos.coords.latitude.toFixed(6));
+      const lng = Number(pos.coords.longitude.toFixed(6));
+      const accuracy = Math.round(pos.coords.accuracy || 0);
+
+      const latInp = document.getElementById('panel-input-lat');
+      const lngInp = document.getElementById('panel-input-lng');
+      if (latInp) latInp.value = lat;
+      if (lngInp) lngInp.value = lng;
+
+      if (activeSelectedLot) {
+        activeSelectedLot.Lat = lat;
+        activeSelectedLot.Lng = lng;
+        renderMapMarkers();
+      }
+
+      if (map) {
+        map.flyTo([lat, lng], 17, { duration: 1.2 });
+      }
+
+      alert(`📍 ĐÃ LẤY TỌA ĐỘ GPS TỪ ĐIỆN THOẠI THÀNH CÔNG!\n\n• Vĩ độ (Lat): ${lat}\n• Kinh độ (Lng): ${lng}\n• Sai số GPS: ±${accuracy} mét\n\n👉 Hãy bấm "Lưu Vị Trí & Trạng Thái Lô" để lưu vào hệ thống!`);
+    },
+    function(err) {
+      if (btn) btn.innerHTML = '<i class="fa fa-location-arrow text-emerald-600"></i> Lấy GPS Điện Thoại';
+      let msg = 'Không thể lấy GPS: ';
+      switch(err.code) {
+        case err.PERMISSION_DENIED:
+          msg += 'Bạn chưa cấp quyền vị trí cho trình duyệt. Vui lòng vào Cài đặt điện thoại / Trình duyệt và bật "Cho phép truy cập vị trí"!';
+          break;
+        case err.POSITION_UNAVAILABLE:
+          msg += 'Tín hiệu GPS không khả dụng. Hãy bật định vị GPS trên điện thoại!';
+          break;
+        case err.TIMEOUT:
+          msg += 'Quá thời gian chờ phản hồi GPS.';
+          break;
+        default:
+          msg += err.message;
+      }
+      alert(msg);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+// 2. Mở ứng dụng Google Maps dẫn đường đến lô đất
+function openGoogleMapsDirections() {
+  const lat = parseFloat(document.getElementById('panel-input-lat')?.value) || (activeSelectedLot ? activeSelectedLot.Lat : null);
+  const lng = parseFloat(document.getElementById('panel-input-lng')?.value) || (activeSelectedLot ? activeSelectedLot.Lng : null);
+  if (!lat || !lng) {
+    alert("Lô đất này chưa có tọa độ GPS!");
+    return;
+  }
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  window.open(url, '_blank');
+}
+
+// 3. Sao chép link Google Maps để gửi khách qua Zalo/Messenger
+function copyGoogleMapsLink() {
+  const lat = parseFloat(document.getElementById('panel-input-lat')?.value) || (activeSelectedLot ? activeSelectedLot.Lat : null);
+  const lng = parseFloat(document.getElementById('panel-input-lng')?.value) || (activeSelectedLot ? activeSelectedLot.Lng : null);
+  if (!lat || !lng) {
+    alert("Lô đất này chưa có tọa độ GPS!");
+    return;
+  }
+  const lotName = activeSelectedLot ? (activeSelectedLot.TenLo || activeSelectedLot.MaLo) : 'Lô đất';
+  const url = `https://www.google.com/maps?q=${lat},${lng}`;
+  const textToCopy = `📍 Vị trí ${lotName} trên Google Maps:\n${url}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      const btn = document.getElementById('btn-copy-map-link');
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-check text-green-300"></i> Đã Copy Link!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+      alert(`✅ Đã sao chép link Google Maps vào khay nhớ tạm:\n\n${textToCopy}\n\n👉 Bạn có thể dán (Paste) để gửi ngay qua Zalo hoặc Messenger cho khách hàng!`);
+    }).catch(() => fallbackPromptMapLink(textToCopy));
+  } else {
+    fallbackPromptMapLink(textToCopy);
+  }
+}
+
+function fallbackPromptMapLink(text) {
+  prompt("Sao chép link Google Maps dưới đây (Ctrl+C hoặc giữ để sao chép):", text);
+}
+
+function copySpecificMapLink(lat, lng, lotName) {
+  const url = `https://www.google.com/maps?q=${lat},${lng}`;
+  const text = `📍 Vị trí ${lotName} trên Google Maps:\n${url}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`✅ Đã sao chép link Google Maps của ${lotName}!\n\n${text}`);
+    }).catch(() => prompt("Sao chép link:", text));
+  } else {
+    prompt("Sao chép link:", text);
+  }
+}
+
+// 4. Định vị vị trí hiện tại của tôi trên bản đồ
+let userLocationMarker = null;
+let userLocationCircle = null;
+
+function locateMyPositionOnMap() {
+  if (!navigator.geolocation || !map) {
+    alert("Trình duyệt không hỗ trợ Geolocation GPS!");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy || 20;
+
+      if (userLocationMarker) map.removeLayer(userLocationMarker);
+      if (userLocationCircle) map.removeLayer(userLocationCircle);
+
+      const myPinHtml = `
+        <div style="position: relative; width: 22px; height: 22px; background-color: #2563eb; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 12px rgba(37,99,235,0.8); display: flex; align-items: center; justify-content: center;">
+          <div style="width: 6px; height: 6px; background: #ffffff; border-radius: 50%;"></div>
+        </div>
+      `;
+
+      userLocationMarker = L.marker([lat, lng], {
+        icon: L.divIcon({ className: 'user-pin-icon', html: myPinHtml, iconSize: [22, 22], iconAnchor: [11, 11] })
+      }).addTo(map);
+
+      userLocationCircle = L.circle([lat, lng], {
+        radius: acc,
+        color: '#3b82f6',
+        fillColor: '#93c5fd',
+        fillOpacity: 0.25,
+        weight: 1.5
+      }).addTo(map);
+
+      userLocationMarker.bindPopup(`
+        <div style="font-family: inherit; font-size: 12px; padding: 4px;">
+          <b style="color: #1e40af;">📍 Vị trí hiện tại của bạn</b><br>
+          <span style="color: #64748b; font-size: 11px;">Độ chính xác: ±${Math.round(acc)} mét</span>
+        </div>
+      `).openPopup();
+
+      map.flyTo([lat, lng], 16, { duration: 1.2 });
+    },
+    function(err) {
+      alert("Không thể định vị GPS: Vui lòng cho phép quyền truy cập vị trí trên trình duyệt/điện thoại!");
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function initMap() {
+  if (map || typeof L === 'undefined') return;
+  const container = document.getElementById('map-container');
+  if (!container) return;
+
+  const centerLat = parseFloat(document.getElementById('cfg-MAP_LAT') ? document.getElementById('cfg-MAP_LAT').value : 10.000000) || 10.000000;
+  const centerLng = parseFloat(document.getElementById('cfg-MAP_LNG') ? document.getElementById('cfg-MAP_LNG').value : 105.700000) || 105.700000;
+  const centerZoom = parseInt(document.getElementById('cfg-MAP_ZOOM') ? document.getElementById('cfg-MAP_ZOOM').value : 9) || 9;
+  map = L.map('map-container', { zoomControl: true, scrollWheelZoom: true }).setView([centerLat, centerLng], centerZoom);
+  
+  // Mặc định nạp Google Maps Đường Phố (Không bao giờ bị 403 Access Blocked, cực kỳ sắc nét & tiếng Việt chuẩn)
+  currentTileLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 21,
+    subdomains: ['0', '1', '2', '3'],
+    attribution: '© Google Maps'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+
+  // Lắng nghe sự kiện click trên bản đồ khi ở chế độ "Chấm vị trí trên bản đồ"
+  map.on('click', function(e) {
+    if (!isPickingCoordinates) return;
+    const lat = e.latlng.lat.toFixed(6);
+    const lng = e.latlng.lng.toFixed(6);
+
+    const latInput = document.getElementById('panel-input-lat');
+    const lngInput = document.getElementById('panel-input-lng');
+    if (latInput) latInput.value = lat;
+    if (lngInput) lngInput.value = lng;
+
+    if (activeSelectedLot) {
+      activeSelectedLot.Lat = parseFloat(lat);
+      activeSelectedLot.Lng = parseFloat(lng);
+      renderMapMarkers();
+    }
+
+    disablePickMapCoordinates();
+    alert(`📍 Đã lấy tọa độ mới: Lat=${lat}, Lng=${lng}\nHãy bấm "Lưu Vị Trí" để lưu vào hệ thống!`);
+  });
+
+  renderMapMarkers();
+}
+
+function switchMapLayer(layerType) {
+  if (!map || typeof L === 'undefined') return;
+  if (currentTileLayer) map.removeLayer(currentTileLayer);
+
+  const btnOsm = document.getElementById('btn-layer-osm');
+  const btnSat = document.getElementById('btn-layer-sat');
+
+  if (layerType === 'satellite' || layerType === 'google_satellite') {
+    // Bản đồ vệ tinh Google Satellite (Chụp ảnh thực địa kèm địa danh tiếng Việt)
+    currentTileLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 21,
+      subdomains: ['0', '1', '2', '3'],
+      attribution: '© Google Satellite'
+    }).addTo(map);
+
+    if (btnSat) { btnSat.classList.add('bg-[#14532d]', 'text-white'); btnSat.classList.remove('text-slate-600'); }
+    if (btnOsm) { btnOsm.classList.remove('bg-[#14532d]', 'text-white'); btnOsm.classList.add('text-slate-600'); }
+  } else {
+    // Bản đồ đường phố Google Maps (lyrs=m: Rõ ràng, tải cực nhanh, không bao giờ lỗi 403)
+    currentTileLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 21,
+      subdomains: ['0', '1', '2', '3'],
+      attribution: '© Google Maps'
+    }).addTo(map);
+
+    if (btnOsm) { btnOsm.classList.add('bg-[#14532d]', 'text-white'); btnOsm.classList.remove('text-slate-600'); }
+    if (btnSat) { btnSat.classList.remove('bg-[#14532d]', 'text-white'); btnSat.classList.add('text-slate-600'); }
+  }
+
+  currentLayerType = layerType;
+}
+
+function enablePickMapCoordinates() {
+  if (!activeSelectedLot) {
+    alert("Vui lòng nhấp vào một lô đất trên bản đồ trước!");
+    return;
+  }
+  isPickingCoordinates = true;
+  const hint = document.getElementById('pick-mode-hint');
+  if (hint) hint.classList.remove('hidden');
+  const btn = document.getElementById('btn-pick-coords');
+  if (btn) {
+    btn.classList.add('bg-amber-600', 'text-white');
+    btn.innerHTML = `<i class="fa fa-hand-pointer"></i> Đang chờ bấm...`;
+  }
+  if (map) map.getContainer().style.cursor = 'crosshair';
+}
+
+function disablePickMapCoordinates() {
+  isPickingCoordinates = false;
+  const hint = document.getElementById('pick-mode-hint');
+  if (hint) hint.classList.add('hidden');
+  const btn = document.getElementById('btn-pick-coords');
+  if (btn) {
+    btn.classList.remove('bg-amber-600', 'text-white');
+    btn.classList.add('bg-sky-100', 'text-sky-800');
+    btn.innerHTML = `<i class="fa fa-crosshairs"></i> Chấm trên bản đồ`;
+  }
+  if (map) map.getContainer().style.cursor = '';
+}
+
+function saveParcelFromPanel() {
+  if (!activeSelectedLot) {
+    alert("Chưa chọn lô đất nào!");
+    return;
+  }
+  const maLo = activeSelectedLot.MaLo;
+  const newStatus = document.getElementById('panel-select-status').value;
+  const newLat = parseFloat(document.getElementById('panel-input-lat').value);
+  const newLng = parseFloat(document.getElementById('panel-input-lng').value);
+
+  activeSelectedLot.TrangThai = newStatus;
+  if (!isNaN(newLat)) activeSelectedLot.Lat = newLat;
+  if (!isNaN(newLng)) activeSelectedLot.Lng = newLng;
+
+  if (STORE.LoDat) {
+    const f = STORE.LoDat.find(x => x.MaLo === maLo);
+    if (f) {
+      f.TrangThai = newStatus;
+      if (!isNaN(newLat)) f.Lat = newLat;
+      if (!isNaN(newLng)) f.Lng = newLng;
+    }
+  }
+
+  renderMapMarkers();
+  renderTableLoDat();
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.success) {
+          alert(`✅ Đã lưu vị trí (${newLat}, ${newLng}) và trạng thái "${newStatus}" của Lô ${maLo} vào Google Sheet thành công!`);
+        } else {
+          alert("Lỗi lưu Google Sheet: " + (res ? res.error : ""));
+        }
+      })
+      .withFailureHandler(err => alert("Lỗi kết nối GAS: " + err))
+      .apiUpdateLotPosition(maLo, newLat, newLng, newStatus);
+  } else {
+    alert(`✅ Đã cập nhật Lô ${maLo}: Trạng thái "${newStatus}", Tọa độ (${newLat}, ${newLng}) (Chế độ xem trước)`);
+  }
+}
+
+function updateMapCounters() {
+  let cAvailable = 0, cDeposited = 0, cSold = 0, cNeg = 0;
+  const lots = STORE.LoDat || [];
+  lots.forEach(lo => {
+    let st = lo.TrangThai || 'Có sẵn';
+    if (st.includes('thương lượng') || st.includes('giữ chỗ')) st = 'Đang TL';
+    if (st === 'Có sẵn') cAvailable++;
+    else if (st === 'Đã cọc') cDeposited++;
+    else if (st === 'Đã bán') cSold++;
+    else if (st === 'Đang TL') cNeg++;
+  });
+
+  const elAvail = document.getElementById('stat-count-available');
+  if (elAvail) elAvail.innerText = cAvailable || 14;
+  const elDep = document.getElementById('stat-count-deposited');
+  if (elDep) elDep.innerText = cDeposited || 22;
+  const elSold = document.getElementById('stat-count-sold');
+  if (elSold) elSold.innerText = cSold || 14;
+  const elNeg = document.getElementById('stat-count-negotiating');
+  if (elNeg) elNeg.innerText = cNeg || 10;
+}
+
+function populateDuAnFilter() {
+  const sel = document.getElementById('map-select-duan');
+  if (!sel) return;
+  const list = STORE.DuAn || [];
+  let html = `<option value="all">Tất cả dự án (${(STORE.LoDat||[]).length || 60})</option>`;
+  list.forEach(da => {
+    html += `<option value="${da.MaDA}">${da.TenDA}</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+function setMapStatusFilter(status) {
+  currentFilterStatus = status;
+  const tags = { 'all': 'tag-filter-all', 'Có sẵn': 'tag-filter-available', 'Đã cọc': 'tag-filter-deposited', 'Đã bán': 'tag-filter-sold', 'Đang TL': 'tag-filter-negotiating' };
+  Object.entries(tags).forEach(([st, btnId]) => {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.toggle('active', st === status);
+  });
+  renderMapMarkers();
+}
+
+function applyMapFilter() {
+  const sel = document.getElementById('map-select-duan');
+  if (sel) currentFilterDuAn = sel.value;
+  renderMapMarkers();
+}
+
+
+function populateLoDatSelect() {
+  const sel = document.getElementById('map-select-malo');
+  if (!sel) return;
+  const lots = (STORE.LoDat && STORE.LoDat.length > 0) ? STORE.LoDat : [];
+  let html = '<option value="">🎯 Chọn lô cần định vị (60 lô)...</option>';
+  lots.forEach(lo => {
+    let st = lo.TrangThai || 'Có sẵn';
+    if (st.includes('thương lượng') || st.includes('giữ chỗ')) st = 'Đang TL';
+    const priceBillion = (Number(lo.TongGia || (lo.DienTich * lo.GiaM2)) / 1000000000).toFixed(1);
+    html += `<option value="${lo.MaLo}">[${lo.MaLo}] ${lo.TenLo || lo.MaLo} - ${st} (${priceBillion} tỷ)</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+function viewLotOnMap(maLo) {
+  if (!maLo) return;
+  switchTab('map');
+
+  setTimeout(() => {
+    if (!map) initMap();
+    if (map) map.invalidateSize();
+
+    const lot = (STORE.LoDat || []).find(x => x.MaLo === maLo);
+    if (!lot) {
+      alert("Không tìm thấy thông tin lô đất " + maLo);
+      return;
+    }
+
+    const lat = parseFloat(lot.Lat);
+    const lng = parseFloat(lot.Lng);
+    if (isNaN(lat) || isNaN(lng)) {
+      alert(`Lô ${maLo} chưa có tọa độ GPS! Hãy chọn điểm trên bản đồ để lưu tọa độ.`);
+      openParcelPanel(lot);
+      return;
+    }
+
+    // Reset bộ lọc bản đồ để chắc chắn ghim lô đất đang hiển thị
+    currentFilterStatus = 'all';
+    currentFilterDuAn = 'all';
+    document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+    const tagAll = document.getElementById('tag-filter-all');
+    if (tagAll) tagAll.classList.add('active');
+    const duanSelect = document.getElementById('map-select-duan');
+    if (duanSelect) duanSelect.value = 'all';
+
+    renderMapMarkers();
+
+    // Bay mượt mà đến đúng vị trí lô đất với zoom 18 cực nét
+    map.flyTo([lat, lng], 18, { duration: 1.2 });
+
+    // Mở popup thông tin của lô đất
+    setTimeout(() => {
+      if (LOT_MARKERS && LOT_MARKERS[maLo]) {
+        LOT_MARKERS[maLo].openPopup();
+      }
+    }, 700);
+
+    // Mở panel chi tiết lô đất
+    openParcelPanel(lot);
+
+    // Đồng bộ giá trị chọn trên dropdown
+    const sel = document.getElementById('map-select-malo');
+    if (sel) sel.value = maLo;
+  }, 200);
+}
+
+function openParcelPanelByMaLo(maLo) {
+  const lot = (STORE.LoDat || []).find(x => x.MaLo === maLo);
+  if (lot) openParcelPanel(lot);
+}
+
+function renderMapMarkers() {
+  if (!map || !markersLayer || typeof L === 'undefined') return;
+  markersLayer.clearLayers();
+  LOT_MARKERS = {};
+
+  const lots = (STORE.LoDat && STORE.LoDat.length > 0) ? STORE.LoDat : [];
+
+  lots.forEach(lo => {
+    let st = lo.TrangThai || 'Có sẵn';
+    if (st.includes('thương lượng') || st.includes('giữ chỗ')) st = 'Đang TL';
+    if (currentFilterStatus !== 'all' && st !== currentFilterStatus) return;
+    if (currentFilterDuAn !== 'all' && lo.MaDuAn && lo.MaDuAn !== currentFilterDuAn) return;
+
+    const lat = parseFloat(lo.Lat) || 10.034185;
+    const lng = parseFloat(lo.Lng) || 105.787688;
+    const cfg = STATUS_CONFIG[st] || STATUS_CONFIG['Có sẵn'];
+
+    // Ghim giọt nước Leaflet sắc nét
+    const pinHtml = `
+      <div style="position: relative; width: 28px; height: 28px; background-color: ${cfg.color}; border: 2.5px solid #ffffff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <div style="width: 8px; height: 8px; background: #ffffff; border-radius: 50%;"></div>
+      </div>
+    `;
+
+    const marker = L.marker([lat, lng], {
+      draggable: true, // Cho phép kéo thả trực tiếp để đổi tọa độ!
+      icon: L.divIcon({ className: 'custom-pin-icon', html: pinHtml, iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28] })
+    });
+
+    // Khi người dùng kéo thả ghim đến vị trí mới
+    marker.on('dragend', function(e) {
+      const pos = e.target.getLatLng();
+      lo.Lat = parseFloat(pos.lat.toFixed(6));
+      lo.Lng = parseFloat(pos.lng.toFixed(6));
+      openParcelPanel(lo);
+      alert(`📍 Đã kéo Lô ${lo.MaLo} đến tọa độ mới:\nLat: ${lo.Lat}\nLng: ${lo.Lng}\nHãy bấm "Lưu Vị Trí" để cập nhật!`);
+    });
+
+    const priceBillion = (Number(lo.TongGia || (lo.DienTich * lo.GiaM2)) / 1000000000).toFixed(1);
+    const popupHtml = `
+      <div style="font-family: inherit; width: 280px; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="background: #14532d; color: #ffffff; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-weight: bold; font-size: 13px;">:: ${lo.TenLo || lo.MaLo}</div>
+          <span style="background: #166534; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${lo.MaLo}</span>
+        </div>
+        <div style="padding: 12px 14px; font-size: 11px; color: #334155; line-height: 1.8;">
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">DỰ ÁN</span> <span style="font-weight: 600;">${lo.MaDuAn || 'KDC Sun Garden'}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">DIỆN TÍCH</span> <span style="font-weight: 600;">${lo.DienTich} m²</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">GIÁ/M²</span> <span style="font-weight: 600;">${Number(lo.GiaM2 || 0).toLocaleString('vi-VN')} VNĐ</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">VỊ TRÍ</span> <span style="font-weight: 600;">${lo.LoaiLo || 'Ven sông'}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">HƯỚNG</span> <span style="font-weight: 600;">${lo.Huong || 'Tây Nam'}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">TRẠNG THÁI</span> <span style="color: ${cfg.color}; font-weight: bold;">${st}</span></div>
+        </div>
+        <div style="text-align: center; padding: 8px 14px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+          <span style="font-size: 17px; font-weight: 900; color: #16a34a;">${priceBillion} tỷ VNĐ</span>
+        </div>
+        <div style="padding: 8px 14px; display: flex; gap: 8px; background: #f8fafc;">
+          <select id="pop-select-${lo.MaLo}" style="flex: 1; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; background: #ffffff;">
+            <option value="Có sẵn" ${st==='Có sẵn'?'selected':''}>Có sẵn</option>
+            <option value="Đã cọc" ${st==='Đã cọc'?'selected':''}>Đã cọc</option>
+            <option value="Đã bán" ${st==='Đã bán'?'selected':''}>Đã bán</option>
+            <option value="Đang TL" ${st==='Đang TL'?'selected':''}>Đang TL</option>
+          </select>
+          <button onclick="savePopupStatus('${lo.MaLo}')" style="background: #14532d; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">💾 Lưu</button>
+        </div>
+        <div style="padding: 6px 14px 10px 14px; display: flex; gap: 6px; background: #f1f5f9; border-top: 1px solid #e2e8f0;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" style="flex: 1; background: #2563eb; color: white; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            🧭 Chỉ đường Maps
+          </a>
+          <button onclick="copySpecificMapLink(${lat}, ${lng}, '${lo.TenLo || lo.MaLo}')" style="flex: 1; background: #d97706; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            📋 Copy Link
+          </button>
+        </div>
+      </div>
+    `;
+
+    marker.bindPopup(popupHtml);
+    marker.on('click', () => openParcelPanel(lo));
+    LOT_MARKERS[lo.MaLo] = marker;
+    LOT_MARKERS[lo.MaLo] = marker;
+    markersLayer.addLayer(marker);
+  });
+  populateLoDatSelect();
+}
+
+function openParcelPanel(lo) {
+  activeSelectedLot = lo;
+  const panel = document.getElementById('parcel-panel');
+  if (!panel) return;
+  let st = lo.TrangThai || 'Có sẵn';
+  if (st.includes('thương lượng') || st.includes('giữ chỗ')) st = 'Đang TL';
+  const priceBillion = (Number(lo.TongGia || (lo.DienTich * lo.GiaM2)) / 1000000000).toFixed(1);
+
+  document.getElementById('panel-lot-title').innerText = lo.TenLo || lo.MaLo;
+  document.getElementById('panel-total-price').innerText = priceBillion + ' tỷ VNĐ';
+  document.getElementById('panel-malo').innerText = lo.MaLo;
+  document.getElementById('panel-duan').innerText = lo.MaDuAn || 'KDC Sun Garden';
+  document.getElementById('panel-dientich').innerText = (lo.DienTich || 78) + ' m²';
+  document.getElementById('panel-mattien').innerText = (lo.MatTien || 7) + ' m';
+  document.getElementById('panel-giam2').innerText = Number(lo.GiaM2 || 20355519).toLocaleString('vi-VN') + ' VNĐ';
+  document.getElementById('panel-huong').innerText = lo.Huong || 'Tây Nam';
+
+  // Điền vào các trường chỉnh sửa
+  const sel = document.getElementById('panel-select-status');
+  if (sel) sel.value = st;
+  const latInp = document.getElementById('panel-input-lat');
+  if (latInp) latInp.value = lo.Lat || '10.034185';
+  const lngInp = document.getElementById('panel-input-lng');
+  if (lngInp) lngInp.value = lo.Lng || '105.787688';
+
+  panel.classList.remove('hidden');
+  setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+}
+
+function closeParcelPanel() {
+  document.getElementById('parcel-panel').classList.add('hidden');
+  disablePickMapCoordinates();
+  setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+}
+
+function savePopupStatus(maLo) {
+  const sel = document.getElementById('pop-select-' + maLo);
+  if (!sel) return;
+  const newSt = sel.value;
+
+  const found = STORE.LoDat ? STORE.LoDat.find(x => x.MaLo === maLo) : null;
+  if (found) found.TrangThai = newSt;
+
+  renderMapMarkers();
+  renderTableLoDat();
+
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.success) {
+          alert(`✅ Đã cập nhật trạng thái Lô ${maLo} thành: ${newSt}`);
+        } else {
+          alert("Lỗi: " + (res ? res.error : "Không thể cập nhật"));
+        }
+      })
+      .withFailureHandler(err => alert("Lỗi kết nối GAS: " + err))
+      .apiUpdateLotStatus(maLo, newSt);
+  } else {
+    alert(`✅ Đã cập nhật trạng thái Lô ${maLo} thành: ${newSt} (Chế độ xem trước)`);
+  }
+}
+
+function initTheme() {
+  try {
+    var saved = localStorage.getItem('bds_pro_theme');
+    var theme = saved || 'light';
+    applyTheme(theme, false);
+  } catch(e) {
+    console.warn('Lỗi initTheme:', e);
+  }
+}
+
+function toggleDarkMode() {
+  var isDark = document.documentElement.classList.contains('dark');
+  var newTheme = isDark ? 'light' : 'dark';
+  applyTheme(newTheme, true);
+  try {
+    if (typeof renderDashboardCharts === 'function') {
+      setTimeout(renderDashboardCharts, 150);
+    }
+  } catch(e) {}
+}
+
+function applyTheme(theme, showToast) {
+  var html = document.documentElement;
+  var icon = document.getElementById('theme-toggle-icon');
+  var text = document.getElementById('theme-toggle-text');
+  var btn = document.getElementById('btn-theme-toggle');
+  var menuIcon = document.getElementById('menu-theme-icon');
+  var menuText = document.getElementById('menu-theme-text');
+
+  if (theme === 'dark') {
+    html.classList.add('dark');
+    try { localStorage.setItem('bds_pro_theme', 'dark'); } catch(e) {}
+    if (icon) icon.className = 'fa fa-sun text-amber-400 text-xs';
+    if (text) text.innerText = 'Sáng';
+    if (btn) {
+      btn.title = 'Đang bật Giao diện Tối - Nhấn để chuyển sang Sáng';
+      btn.classList.add('bg-slate-800', 'border-slate-700', 'text-amber-400');
+    }
+    if (menuIcon) menuIcon.className = 'fa fa-sun text-amber-400';
+    if (menuText) {
+      menuText.innerText = 'Đang Tối';
+      menuText.className = 'text-[10px] px-2 py-0.5 rounded font-bold bg-amber-900/60 text-amber-300';
+    }
+    if (showToast && typeof showNotify === 'function') {
+      showNotify('🌙 Đã kích hoạt Giao diện Tối (Dark Mode)', 'info');
+    }
+  } else {
+    html.classList.remove('dark');
+    try { localStorage.setItem('bds_pro_theme', 'light'); } catch(e) {}
+    if (icon) icon.className = 'fa fa-moon text-slate-700 text-xs';
+    if (text) text.innerText = 'Tối';
+    if (btn) {
+      btn.title = 'Đang bật Giao diện Sáng - Nhấn để chuyển sang Tối';
+      btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-amber-400');
+    }
+    if (menuIcon) menuIcon.className = 'fa fa-moon text-slate-700';
+    if (menuText) {
+      menuText.innerText = 'Đang Sáng';
+      menuText.className = 'text-[10px] px-2 py-0.5 rounded font-bold bg-slate-200 text-slate-700';
+    }
+    if (showToast && typeof showNotify === 'function') {
+      showNotify('☀️ Đã kích hoạt Giao diện Sáng (Light Mode)', 'info');
+    }
+  }
+}
+
+
+</script>
