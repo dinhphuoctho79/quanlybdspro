@@ -88,6 +88,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-amber-100 text-amber-800',
     avatarBg: 'bg-amber-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: true,
     canDelete: true,
@@ -98,6 +99,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-purple-100 text-purple-800',
     avatarBg: 'bg-purple-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'nhanvien', 'hoahong', 'baocao'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: true,
@@ -108,6 +110,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-emerald-100 text-emerald-800',
     avatarBg: 'bg-emerald-600',
     allowedTabs: ['lodat', 'map', 'khachhang', 'giaodich', 'hoahong'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: false,
@@ -118,6 +121,18 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-blue-100 text-blue-800',
     avatarBg: 'bg-blue-600',
     allowedTabs: ['dashboard', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'hoahong', 'baocao'],
+    canAdd: true,
+    canEdit: true,
+    canEditConfig: false,
+    canDelete: false,
+    canManageUsers: false
+  },
+  custom: {
+    name: 'Tùy Biến',
+    badgeClass: 'bg-indigo-100 text-indigo-800',
+    avatarBg: 'bg-indigo-600',
+    allowedTabs: ['lodat', 'map', 'khachhang'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: false,
@@ -210,54 +225,117 @@ function applyUserPermissions(user) {
     return;
   }
   CURRENT_USER = user;
-  const perm = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.admin;
+  const rolePerm = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.admin;
+
+  // Quyền hạn thực tế (ưu tiên quyền riêng được cấp chọn mục, nếu không dùng mặc định của vai trò)
+  const allowedTabs = (user.allowedTabs && user.allowedTabs.length > 0) ? user.allowedTabs : rolePerm.allowedTabs;
+  CURRENT_USER.allowedTabs = allowedTabs;
+  CURRENT_USER.canAdd = user.canAdd !== undefined ? user.canAdd : (rolePerm.canAdd !== false);
+  CURRENT_USER.canEdit = user.canEdit !== undefined ? user.canEdit : (rolePerm.canEdit !== false);
+  CURRENT_USER.canDelete = user.canDelete !== undefined ? user.canDelete : (rolePerm.canDelete === true);
+  CURRENT_USER.canManageUsers = user.canManageUsers !== undefined ? user.canManageUsers : (rolePerm.canManageUsers === true);
+
+  const roleName = user.role === 'custom' ? 'Tùy Biến' : rolePerm.name;
+  const badgeClass = rolePerm.badgeClass;
+  const avatarBg = rolePerm.avatarBg;
 
   // Cập nhật Header
   const avatarEl = document.getElementById('user-avatar');
   if (avatarEl) {
     avatarEl.innerText = user.avatarInitials;
-    avatarEl.className = `w-7 h-7 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white`;
+    avatarEl.className = `w-7 h-7 rounded-full ${avatarBg} text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white`;
   }
   const nameEl = document.getElementById('user-display-name');
   if (nameEl) nameEl.innerText = user.fullName;
   const badgeEl = document.getElementById('user-role-badge');
   if (badgeEl) {
-    badgeEl.innerText = perm.name;
-    badgeEl.className = `text-[9px] font-bold ${perm.badgeClass} px-1.5 py-0.2 rounded-full inline-block mt-0.5`;
+    badgeEl.innerText = roleName;
+    badgeEl.className = `text-[9px] font-bold ${badgeClass} px-1.5 py-0.2 rounded-full inline-block mt-0.5`;
   }
 
   // Cập nhật Menu dropdown
   const menuAvatar = document.getElementById('menu-avatar-large');
   if (menuAvatar) {
     menuAvatar.innerText = user.avatarInitials;
-    menuAvatar.className = `w-9 h-9 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-sm shadow-md`;
+    menuAvatar.className = `w-9 h-9 rounded-full ${avatarBg} text-white font-extrabold flex items-center justify-center text-sm shadow-md`;
   }
   const menuName = document.getElementById('menu-user-fullname');
   if (menuName) menuName.innerText = user.fullName;
   const menuTitle = document.getElementById('menu-user-title');
-  if (menuTitle) menuTitle.innerText = user.title;
-  const menuDept = document.getElementById('menu-user-dept');
-  if (menuDept) menuDept.innerText = user.department;
+  if (menuTitle) menuTitle.innerText = user.title || roleName;
   const menuRoleBadge = document.getElementById('menu-user-role-badge');
   if (menuRoleBadge) {
-    menuRoleBadge.innerText = perm.name;
-    menuRoleBadge.className = `text-[10px] font-bold ${perm.badgeClass} px-2 py-0.5 rounded-full inline-block`;
+    menuRoleBadge.innerText = roleName;
+    menuRoleBadge.className = `text-[10px] font-bold ${badgeClass} px-2 py-0.5 rounded-full inline-block`;
   }
 
   // Cập nhật nút quản trị
   const adminMenuSection = document.getElementById('menu-admin-section');
   if (adminMenuSection) {
-    adminMenuSection.style.display = perm.canManageUsers ? 'block' : 'none';
+    adminMenuSection.style.display = CURRENT_USER.canManageUsers ? 'block' : 'none';
   }
 
-  // Cập nhật giao diện theo quyền
-  applyPermissionRestrictions(perm);
+  // 1. KHÓA / ẨN CÁC TÍNH NĂNG TRÊN THANH SIDEBAR
+  const allTabs = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+  allTabs.forEach(t => {
+    const btn = document.getElementById('btn-tab-' + t);
+    if (btn) {
+      if (allowedTabs.includes(t)) {
+        btn.style.display = '';
+        btn.classList.remove('hidden');
+      } else {
+        btn.style.display = 'none';
+        btn.classList.add('hidden');
+      }
+    }
+  });
+
+  // 2. ẨN TIÊU ĐỀ CHUYÊN MỤC TRÊN SIDEBAR NẾU TẤT CẢ MỤC CON BỊ KHÓA
+  const categoryMap = [
+    { title: 'TỔNG QUAN', tabs: ['dashboard'] },
+    { title: 'QUẢN LÝ DỰ ÁN', tabs: ['duan', 'lodat', 'map'] },
+    { title: 'KINH DOANH', tabs: ['khachhang', 'giaodich'] },
+    { title: 'TÀI CHÍNH', tabs: ['doanhthu', 'chiphi'] },
+    { title: 'NHÂN SỰ', tabs: ['nhanvien', 'hoahong'] },
+    { title: 'BÁO CÁO & CÀI ĐẶT', tabs: ['baocao', 'caidat'] }
+  ];
+  document.querySelectorAll('.sidebar-category').forEach(catEl => {
+    const catText = catEl.innerText.trim();
+    const group = categoryMap.find(g => g.title === catText);
+    if (group) {
+      const hasAny = group.tabs.some(t => allowedTabs.includes(t));
+      catEl.style.display = hasAny ? '' : 'none';
+    }
+  });
+
+  // 3. KHÓA / ẨN ĐIỀU HƯỚNG DƯỚI ĐÁY ĐIỆN THOẠI (BOTTOM NAV)
+  const bnavTabs = ['dashboard', 'duan', 'map', 'lodat'];
+  bnavTabs.forEach(t => {
+    const b = document.getElementById('bnav-' + t);
+    if (b) {
+      b.style.display = allowedTabs.includes(t) ? '' : 'none';
+    }
+  });
+
+  // 4. KIỂM TRA TAB HIỆN TẠI - NẾU BỊ KHÓA THÌ CHUYỂN NGAY SANG TAB ĐƯỢC PHÉP ĐẦU TIÊN
+  const currentActiveTab = allTabs.find(t => {
+    const v = document.getElementById('view-' + t);
+    return v && !v.classList.contains('hidden');
+  });
+  if (!currentActiveTab || !allowedTabs.includes(currentActiveTab)) {
+    const firstAllowed = allowedTabs[0] || 'lodat';
+    switchTab(firstAllowed);
+  }
+
+  // 5. CẬP NHẬT CÁC NÚT THAO TÁC NGHIỆP VỤ (THÊM, SỬA, XÓA, PHÂN QUYỀN)
+  applyPermissionRestrictions(CURRENT_USER);
 }
 
-function applyPermissionRestrictions(perm) {
-  if (!perm) return;
-  const canEdit = perm.canEdit !== false;
-  const canDelete = perm.canDelete === true;
+function applyPermissionRestrictions(userOrPerm) {
+  const canAdd = userOrPerm ? (userOrPerm.canAdd !== false) : true;
+  const canEdit = userOrPerm ? (userOrPerm.canEdit !== false) : true;
+  const canDelete = userOrPerm ? (userOrPerm.canDelete === true) : false;
+  const canManage = userOrPerm ? (userOrPerm.canManageUsers === true) : false;
 
   // Ẩn/hiện nút xóa
   document.querySelectorAll('.btn-action-delete').forEach(btn => {
@@ -267,15 +345,14 @@ function applyPermissionRestrictions(perm) {
   document.querySelectorAll('.btn-action-edit').forEach(btn => {
     btn.style.display = canEdit ? '' : 'none';
   });
-  // Ẩn/hiện nút thêm mới dữ liệu (Dự Án, Khách Hàng, Lô Đất, Giao Dịch...)
-  document.querySelectorAll('button[onclick*="openAddModal"]').forEach(btn => {
-    btn.style.display = canEdit ? '' : 'none';
+  // Ẩn/hiện nút thêm mới dữ liệu
+  document.querySelectorAll('button[onclick*="openAddModal"], button[onclick*="openModal"], button[onclick*="showAdd"]').forEach(btn => {
+    btn.style.display = canAdd ? '' : 'none';
   });
   // Ẩn/hiện nút cấp quyền nhân viên
-  const btnRbac = document.querySelector('button[onclick*="openEmployeeRbacModal()"]');
-  if (btnRbac) {
-    btnRbac.style.display = perm.canManageUsers ? '' : 'none';
-  }
+  document.querySelectorAll('button[onclick*="openEmployeeRbacModal"]').forEach(btn => {
+    btn.style.display = canManage ? '' : 'none';
+  });
 }
 
 
@@ -1585,6 +1662,32 @@ function switchTab(tabId) {
   closeMobileSidebar();
 
   const tabs = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+
+  // BẢO VỆ PHÂN QUYỀN CHẶT CHẼ: CHẶN TRUY CẬP NẾU TÀI KHOẢN BỊ KHÓA MỤC NÀY
+  if (CURRENT_USER) {
+    const allowedTabs = CURRENT_USER.allowedTabs || (ROLE_PERMISSIONS[CURRENT_USER.role] ? ROLE_PERMISSIONS[CURRENT_USER.role].allowedTabs : ['lodat', 'map']);
+    if (!allowedTabs.includes(tabId)) {
+      const tabNames = {
+        dashboard: 'Bảng Điều Khiển', duan: 'Quản Lý Dự Án', lodat: 'Quản Lý Lô Đất', map: 'Bản Đồ Lô Đất',
+        khachhang: 'Quản Lý Khách Hàng', giaodich: 'Quản Lý Giao Dịch', doanhthu: 'Quản Lý Doanh Thu',
+        chiphi: 'Quản Lý Chi Phí', nhanvien: 'Quản Lý Nhân Viên', hoahong: 'Bảng Tính Hoa Hồng',
+        baocao: 'Báo Cáo Tổng Hợp', caidat: 'Cài Đặt Hệ Thống'
+      };
+      showToast(`⛔ BẠN KHÔNG CÓ QUYỀN TRUY CẬP "${tabNames[tabId] || tabId}"! Chức năng này đã bị khóa đối với vai trò của bạn.`, 'error');
+      // Tự động giữ nguyên hoặc chuyển sang tab hợp lệ
+      const firstAllowed = allowedTabs[0] || 'lodat';
+      if (firstAllowed !== tabId) {
+        tabs.forEach(t => {
+          const el = document.getElementById('view-' + t);
+          if (el) el.classList.toggle('hidden', t !== firstAllowed);
+          const btn = document.getElementById('btn-tab-' + t);
+          if (btn) btn.classList.toggle('active', t === firstAllowed);
+        });
+      }
+      return;
+    }
+  }
+
   tabs.forEach(t => {
     const el = document.getElementById('view-' + t);
     if (el) el.classList.toggle('hidden', t !== tabId);
@@ -1934,6 +2037,8 @@ function closeEmployeeRbacModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+const RBAC_ALL_TABS = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+
 function onSelectRbacEmployee(maNV) {
   const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
   if (!nv) return;
@@ -1944,7 +2049,6 @@ function onSelectRbacEmployee(maNV) {
   let matchedAcc = Object.values(USER_ACCOUNTS).find(acc => acc.username.toLowerCase() === nv.MaNV.toLowerCase() || (nv.HoTen && acc.fullName.toLowerCase() === nv.HoTen.toLowerCase()));
 
   if (!matchedAcc) {
-    // Tự sinh username từ Mã NV hoặc chức vụ
     let defaultRole = 'sale';
     if ((nv.ChucVu || '').toLowerCase().includes('giám đốc')) defaultRole = 'admin';
     else if ((nv.ChucVu || '').toLowerCase().includes('trưởng') || (nv.ChucVu || '').toLowerCase().includes('quản lý')) defaultRole = 'truongphong';
@@ -1953,43 +2057,79 @@ function onSelectRbacEmployee(maNV) {
     document.getElementById('rbac-inp-username').value = nv.MaNV.toLowerCase();
     document.getElementById('rbac-select-role').value = defaultRole;
     document.getElementById('rbac-inp-password').value = '123456';
+    document.getElementById('rbac-chk-active').checked = true;
+
+    onRoleTemplateChange(defaultRole);
   } else {
     document.getElementById('rbac-inp-username').value = matchedAcc.username;
-    document.getElementById('rbac-select-role').value = matchedAcc.role;
+    document.getElementById('rbac-select-role').value = matchedAcc.role || 'custom';
     document.getElementById('rbac-inp-password').value = matchedAcc.password || '123456';
-  }
+    document.getElementById('rbac-chk-active').checked = matchedAcc.isActive !== false;
 
-  previewRolePermissions(document.getElementById('rbac-select-role').value);
+    // Thiết lập tích chọn 12 checkboxes theo allowedTabs đã lưu
+    const userTabs = matchedAcc.allowedTabs || (ROLE_PERMISSIONS[matchedAcc.role] ? ROLE_PERMISSIONS[matchedAcc.role].allowedTabs : ['lodat', 'map']);
+    RBAC_ALL_TABS.forEach(t => {
+      const chk = document.getElementById('rbac-tab-' + t);
+      if (chk) chk.checked = userTabs.includes(t);
+    });
+
+    // Thiết lập tích chọn quyền thao tác
+    const canAdd = matchedAcc.canAdd !== undefined ? matchedAcc.canAdd : (ROLE_PERMISSIONS[matchedAcc.role]?.canAdd !== false);
+    const canEdit = matchedAcc.canEdit !== undefined ? matchedAcc.canEdit : (ROLE_PERMISSIONS[matchedAcc.role]?.canEdit !== false);
+    const canDelete = matchedAcc.canDelete !== undefined ? matchedAcc.canDelete : (ROLE_PERMISSIONS[matchedAcc.role]?.canDelete === true);
+    const canManage = matchedAcc.canManageUsers !== undefined ? matchedAcc.canManageUsers : (ROLE_PERMISSIONS[matchedAcc.role]?.canManageUsers === true);
+
+    document.getElementById('rbac-action-add').checked = canAdd;
+    document.getElementById('rbac-action-edit').checked = canEdit;
+    document.getElementById('rbac-action-delete').checked = canDelete;
+    document.getElementById('rbac-action-manage').checked = canManage;
+
+    updateRbacSelectedCount();
+  }
 }
 
-function previewRolePermissions(roleKey) {
+function onRoleTemplateChange(roleKey) {
+  if (roleKey === 'custom') {
+    updateRbacSelectedCount();
+    return;
+  }
+
   const perm = ROLE_PERMISSIONS[roleKey];
-  const descEl = document.getElementById('rbac-role-desc');
-  if (!descEl || !perm) return;
+  if (!perm) return;
 
-  const tabTitles = {
-    dashboard: 'Bảng Điều Khiển',
-    duan: 'Dự Án',
-    lodat: 'Lô Đất',
-    map: 'Bản Đồ',
-    khachhang: 'Khách Hàng',
-    giaodich: 'Giao Dịch',
-    doanhthu: 'Doanh Thu',
-    chiphi: 'Chi Phí',
-    nhanvien: 'Nhân Viên',
-    hoahong: 'Hoa Hồng',
-    baocao: 'Báo Cáo',
-    caidat: 'Cài Đặt'
-  };
+  // Tự động tích/bỏ tích 12 tab theo vai trò mẫu
+  RBAC_ALL_TABS.forEach(t => {
+    const chk = document.getElementById('rbac-tab-' + t);
+    if (chk) chk.checked = perm.allowedTabs.includes(t);
+  });
 
-  const allowedList = perm.allowedTabs.map(t => `<span class="inline-block bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded text-[10px] font-bold mr-1 mb-1">✓ ${tabTitles[t] || t}</span>`).join('');
+  // Tự động tích các cờ thao tác
+  document.getElementById('rbac-action-add').checked = perm.canAdd !== false;
+  document.getElementById('rbac-action-edit').checked = perm.canEdit !== false;
+  document.getElementById('rbac-action-delete').checked = perm.canDelete === true;
+  document.getElementById('rbac-action-manage').checked = perm.canManageUsers === true;
 
-  descEl.innerHTML = `
-    <div class="space-y-1">
-      <div class="font-bold text-slate-800">Quyền hạn truy cập (${perm.allowedTabs.length}/12 tính năng):</div>
-      <div class="flex flex-wrap pt-1">${allowedList}</div>
-    </div>
-  `;
+  updateRbacSelectedCount();
+}
+
+function onCustomCheckboxChange() {
+  document.getElementById('rbac-select-role').value = 'custom';
+  updateRbacSelectedCount();
+}
+
+function selectAllRbacTabs(isSelectAll) {
+  RBAC_ALL_TABS.forEach(t => {
+    const chk = document.getElementById('rbac-tab-' + t);
+    if (chk) chk.checked = isSelectAll;
+  });
+  document.getElementById('rbac-select-role').value = isSelectAll ? 'admin' : 'custom';
+  updateRbacSelectedCount();
+}
+
+function updateRbacSelectedCount() {
+  const count = RBAC_ALL_TABS.filter(t => document.getElementById('rbac-tab-' + t)?.checked).length;
+  const countEl = document.getElementById('rbac-count-selected');
+  if (countEl) countEl.innerText = count + '/12';
 }
 
 function resetRbacDefaultPassword() {
@@ -2021,9 +2161,22 @@ function saveEmployeeRbacSettings() {
     return;
   }
 
+  // Thu thập danh sách các tab được chọn
+  const selectedTabs = RBAC_ALL_TABS.filter(t => document.getElementById('rbac-tab-' + t)?.checked);
+  if (selectedTabs.length === 0) {
+    alert("⚠️ Vui lòng chọn ít nhất 1 chức năng được phép truy cập!");
+    return;
+  }
+
+  const canAdd = document.getElementById('rbac-action-add').checked;
+  const canEdit = document.getElementById('rbac-action-edit').checked;
+  const canDelete = document.getElementById('rbac-action-delete').checked;
+  const canManageUsers = document.getElementById('rbac-action-manage').checked;
+
   const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
   const fullName = nv ? nv.HoTen : username;
   const initials = fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const roleName = role === 'custom' ? 'Tùy Biến' : (ROLE_PERMISSIONS[role] ? ROLE_PERMISSIONS[role].name : role);
 
   // Cập nhật hoặc tạo mới tài khoản trong USER_ACCOUNTS
   USER_ACCOUNTS[username] = {
@@ -2031,8 +2184,13 @@ function saveEmployeeRbacSettings() {
     password: password,
     fullName: fullName,
     role: role,
+    allowedTabs: selectedTabs,
+    canAdd: canAdd,
+    canEdit: canEdit,
+    canDelete: canDelete,
+    canManageUsers: canManageUsers,
     avatarInitials: initials || 'NV',
-    title: `${ROLE_PERMISSIONS[role].name} (${maNV})`,
+    title: `${roleName} (${maNV})`,
     isActive: isActive
   };
 
@@ -2041,15 +2199,23 @@ function saveEmployeeRbacSettings() {
     localStorage.setItem('bds_custom_accounts', JSON.stringify(USER_ACCOUNTS));
   } catch(e){}
 
+  // Ghi nhật ký hệ thống
+  logSystemActivity(
+    'CẤP QUYỀN CHỌN MỤC',
+    `${fullName} (${maNV})`,
+    `Cấp ${selectedTabs.length}/12 mục: [${selectedTabs.join(', ')}] | Thêm:${canAdd ? 'Có' : 'Không'} | Sửa:${canEdit ? 'Có' : 'Không'} | Xóa:${canDelete ? 'Có' : 'Không'} | QuảnTrị:${canManageUsers ? 'Có' : 'Không'}`
+  );
+
   // Nếu đang cấp quyền cho chính tài khoản đang đăng nhập, áp dụng quyền mới ngay lập tức
-  if (CURRENT_USER.username.toLowerCase() === username.toLowerCase()) {
+  if (CURRENT_USER && CURRENT_USER.username.toLowerCase() === username.toLowerCase()) {
     applyUserPermissions(USER_ACCOUNTS[username]);
   }
 
   closeEmployeeRbacModal();
   renderTableNhanVien();
 
-  alert(`✅ CẤP QUYỀN & ĐẶT MẬT KHẨU THÀNH CÔNG!\n\n• Nhân viên: ${fullName} (${maNV})\n• Tên đăng nhập: ${username}\n• Mật khẩu mới: ${password}\n• Vai trò cấp: ${ROLE_PERMISSIONS[role].name}\n\nNhân viên có thể đăng nhập ngay với thông tin trên!`);
+  showToast(`✅ Đã lưu cấp quyền thành công cho ${fullName}! (${selectedTabs.length}/12 mục)`, 'success');
+  alert(`✅ CẤP QUYỀN CHỌN MỤC THÀNH CÔNG!\n\n• Nhân viên: ${fullName} (${maNV})\n• Tên đăng nhập: ${username}\n• Mật khẩu: ${password}\n• Vai trò: ${roleName}\n• Số tính năng được mở: ${selectedTabs.length}/12 tính năng\n• Quyền thêm: ${canAdd ? 'Có' : 'Khóa'}\n• Quyền sửa: ${canEdit ? 'Có' : 'Khóa'}\n• Quyền xóa: ${canDelete ? 'Có' : 'Khóa'}\n• Quản trị: ${canManageUsers ? 'Có' : 'Khóa'}\n\nNhân viên đăng nhập sẽ chỉ thấy và thao tác đúng các mục được cấp!`);
 }
 
 // ================= ĐỔI MẬT KHẨU CÁ NHÂN =================
@@ -2397,6 +2563,213 @@ function printDepositReceipt() {
   window.print();
 }
 
+
+// ================= HỆ THỐNG ĐỒNG HỒ LED 3D THỜI GIAN THỰC =================
+function initLedLiveClock() {
+  const clockEl = document.getElementById('led-live-clock');
+  if (!clockEl) return;
+  function updateTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    clockEl.innerText = `${h}:${m}:${s}`;
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
+// ================= HỆ THỐNG NHẬT KÝ THAO TÁC HỆ THỐNG (AUDIT LOGS) =================
+let AUDIT_LOGS = [];
+try {
+  const savedLogs = localStorage.getItem('bds_audit_logs');
+  if (savedLogs) AUDIT_LOGS = JSON.parse(savedLogs);
+} catch (e) {}
+
+if (!AUDIT_LOGS || AUDIT_LOGS.length === 0) {
+  AUDIT_LOGS = [
+    { id: 'LOG-001', thoiGian: '11/10/2026 17:50:22', nguoiDung: 'Nguyễn Công Dinh', vaiTro: 'Giám Đốc', hanhDong: 'CẬP NHẬT CẤU HÌNH', doiTuong: 'Logo & VietQR Doanh Nghiệp', chiTiet: 'Lưu cấu hình MB Bank 0393990638' },
+    { id: 'LOG-002', thoiGian: '11/10/2026 17:35:10', nguoiDung: 'Nguyễn Công Dinh', vaiTro: 'Giám Đốc', hanhDong: 'ĐĂNG NHẬP', doiTuong: 'Hệ thống BĐS PRO', chiTiet: 'Đăng nhập phiên làm việc Giám Đốc' },
+    { id: 'LOG-003', thoiGian: '11/10/2026 16:42:05', nguoiDung: 'Lê Văn Hoàng', vaiTro: 'Trưởng Phòng', hanhDong: 'THÊM KHÁCH HÀNG', doiTuong: 'Khách hàng KH055 (Đặng Tuấn Anh)', chiTiet: 'Tạo hồ sơ khách quan tâm Lô A1' },
+    { id: 'LOG-004', thoiGian: '11/10/2026 15:20:18', nguoiDung: 'Nguyễn Thị Mai', vaiTro: 'Sale BĐS', hanhDong: 'XUẤT PHIẾU CỌC', doiTuong: 'Lô đất L0001 (Lô A1)', chiTiet: 'Tạo phiếu đặt cọc VietQR 50.000.000 đ' },
+    { id: 'LOG-005', thoiGian: '11/10/2026 14:10:45', nguoiDung: 'Phạm Thị Thu Thảo', vaiTro: 'Kế Toán', hanhDong: 'KHỚP LỆNH CHUYỂN KHOẢN', doiTuong: 'Giao dịch CK-001 (50.000.000 đ)', chiTiet: 'Khớp cọc thành công vào Lô A1' }
+  ];
+}
+
+function logSystemActivity(hanhDong, doiTuong, chiTiet) {
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  const user = CURRENT_USER || { fullName: 'Hệ Thống', title: 'Khách / Quản trị' };
+  
+  const logItem = {
+    id: 'LOG-' + String(Date.now()).slice(-4),
+    thoiGian: dateStr,
+    nguoiDung: user.fullName || 'Người dùng',
+    vaiTro: user.title || 'Quản trị viên',
+    hanhDong: hanhDong || 'THAO TÁC',
+    doiTuong: doiTuong || 'Dữ liệu',
+    chiTiet: chiTiet || 'Thực hiện thay đổi trong hệ thống'
+  };
+
+  AUDIT_LOGS.unshift(logItem);
+  if (AUDIT_LOGS.length > 100) AUDIT_LOGS.pop();
+
+  try {
+    localStorage.setItem('bds_audit_logs', JSON.stringify(AUDIT_LOGS));
+  } catch (e) {}
+
+  renderAuditLogs();
+}
+
+function renderAuditLogs() {
+  const tbody = document.getElementById('tbody-audit-logs');
+  if (!tbody) return;
+
+  tbody.innerHTML = AUDIT_LOGS.map(log => {
+    let badgeColor = 'bg-slate-100 text-slate-700';
+    if (log.hanhDong.includes('XÓA')) badgeColor = 'bg-rose-100 text-rose-800 font-bold';
+    else if (log.hanhDong.includes('THÊM') || log.hanhDong.includes('CỌC')) badgeColor = 'bg-emerald-100 text-emerald-800 font-bold';
+    else if (log.hanhDong.includes('SỬA') || log.hanhDong.includes('CẤU HÌNH')) badgeColor = 'bg-amber-100 text-amber-800 font-bold';
+    else if (log.hanhDong.includes('KHỚP LỆNH') || log.hanhDong.includes('CHUYỂN KHOẢN')) badgeColor = 'bg-cyan-100 text-cyan-800 font-bold';
+
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="font-mono text-slate-500 whitespace-nowrap p-2">${log.thoiGian}</td>
+        <td class="font-bold text-slate-800 p-2 whitespace-nowrap">${log.nguoiDung}</td>
+        <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">${log.vaiTro}</span></td>
+        <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] ${badgeColor}">${log.hanhDong}</span></td>
+        <td class="font-semibold text-slate-800 p-2">${log.doiTuong}</td>
+        <td class="text-slate-600 p-2">${log.chiTiet}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function clearAuditLogs() {
+  if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử thao tác hệ thống?")) {
+    AUDIT_LOGS = [];
+    try { localStorage.removeItem('bds_audit_logs'); } catch(e){}
+    renderAuditLogs();
+    showToast("Đã dọn sạch nhật ký hệ thống!", "info");
+  }
+}
+
+// ================= HỆ THỐNG LỊCH SỬ CHUYỂN KHOẢN NGÂN HÀNG (VIETQR NAPAS) =================
+let CHUYEN_KHOAN = [];
+try {
+  const savedTransfers = localStorage.getItem('bds_chuyen_khoan');
+  if (savedTransfers) CHUYEN_KHOAN = JSON.parse(savedTransfers);
+} catch (e) {}
+
+if (!CHUYEN_KHOAN || CHUYEN_KHOAN.length === 0) {
+  CHUYEN_KHOAN = [
+    { maCK: 'CK-8921', nganHang: 'MB Bank', stk: '0393990638', nguoiChuyen: 'TRƯƠNG VĂN NAM', soTien: '50.000.000 đ', noiDung: 'COC LO A1 KDC SUN GARDEN', thoiGian: '11/10/2026 14:20', trangThai: 'ĐÃ KHỚP LỆNH' },
+    { maCK: 'CK-8920', nganHang: 'Vietcombank', stk: '0393990638', nguoiChuyen: 'PHAN THỊ OANH', soTien: '100.000.000 đ', noiDung: 'THANH TOAN DOT 1 LO B2', thoiGian: '11/10/2026 10:15', trangThai: 'ĐÃ KHỚP LỆNH' },
+    { maCK: 'CK-8919', nganHang: 'Techcombank', stk: '0393990638', nguoiChuyen: 'NGUYỄN HOÀNG XA', soTien: '50.000.000 đ', noiDung: 'DAT COC LO E7 MEKONG RIVERSIDE', thoiGian: '10/10/2026 16:40', trangThai: 'CHỜ ĐỐI SOÁT' },
+    { maCK: 'CK-8918', nganHang: 'BIDV', stk: '0393990638', nguoiChuyen: 'LÊ HOÀNG CƯỜNG', soTien: '50.000.000 đ', noiDung: 'COC LO F1 MEKONG', thoiGian: '09/10/2026 11:30', trangThai: 'ĐÃ KHỚP LỆNH' }
+  ];
+}
+
+function renderTableChuyenKhoan() {
+  const tbody = document.getElementById('tbody-chuyenkhoan');
+  if (!tbody) return;
+
+  tbody.innerHTML = CHUYEN_KHOAN.map(item => {
+    let stClass = 'bg-amber-100 text-amber-800';
+    if (item.trangThai === 'ĐÃ KHỚP LỆNH') stClass = 'bg-emerald-100 text-emerald-800 font-bold';
+
+    return `
+      <tr>
+        <td class="font-mono font-bold text-slate-900">${item.maCK}</td>
+        <td class="font-semibold text-slate-800"><span class="px-2 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-200">${item.nganHang}</span></td>
+        <td class="font-mono text-slate-700">${item.stk}</td>
+        <td class="font-bold uppercase text-slate-800">${item.nguoiChuyen}</td>
+        <td class="text-right font-black text-emerald-700">${item.soTien}</td>
+        <td class="font-medium text-slate-700">${item.noiDung}</td>
+        <td class="text-slate-400 whitespace-nowrap">${item.thoiGian}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.trangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="matchTransferToLot('${item.maCK}')" class="p-1 px-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="Khớp lệnh cọc">
+            <i class="fa fa-check"></i> Khớp
+          </button>
+          <button onclick="deleteTransfer('${item.maCK}')" class="btn-action-delete" title="Xóa">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddTransferModal() {
+  document.getElementById('transfer-modal').classList.remove('hidden');
+  const refInp = document.getElementById('inp-transfer-ref');
+  if (refInp) refInp.value = 'CK-' + Math.floor(1000 + Math.random() * 9000);
+}
+
+function closeTransferModal() {
+  document.getElementById('transfer-modal').classList.add('hidden');
+}
+
+function submitNewTransfer() {
+  const ref = document.getElementById('inp-transfer-ref')?.value.trim() || ('CK-' + Math.floor(1000 + Math.random() * 9000));
+  const bank = document.getElementById('inp-transfer-bank')?.value.trim() || 'MB Bank';
+  const stk = document.getElementById('inp-transfer-stk')?.value.trim() || '0393990638';
+  const sender = document.getElementById('inp-transfer-sender')?.value.trim().toUpperCase() || 'KHÁCH HÀNG';
+  const amount = Number(document.getElementById('inp-transfer-amount')?.value || 50000000);
+  const memo = document.getElementById('inp-transfer-memo')?.value.trim() || 'DAT COC BDS PRO';
+
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const newItem = {
+    maCK: ref,
+    nganHang: bank,
+    stk: stk,
+    nguoiChuyen: sender,
+    soTien: amount.toLocaleString('vi-VN') + ' đ',
+    noiDung: memo,
+    thoiGian: dateStr,
+    trangThai: 'ĐÃ KHỚP LỆNH'
+  };
+
+  CHUYEN_KHOAN.unshift(newItem);
+  try {
+    localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN));
+  } catch (e) {}
+
+  renderTableChuyenKhoan();
+  closeTransferModal();
+
+  logSystemActivity('GHI NHẬN CHUYỂN KHOẢN', `Giao dịch ${ref} (${newItem.soTien})`, `Người chuyển: ${sender} | Nội dung: ${memo}`);
+  showToast(`Đã ghi nhận giao dịch chuyển khoản ${ref} thành công!`, 'success');
+}
+
+function matchTransferToLot(maCK) {
+  const item = CHUYEN_KHOAN.find(x => x.maCK === maCK);
+  if (!item) return;
+  item.trangThai = 'ĐÃ KHỚP LỆNH';
+  try { localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN)); } catch(e){}
+  renderTableChuyenKhoan();
+  logSystemActivity('KHỚP LỆNH CỌC', `Mã ${maCK}`, `Khớp tiền cọc: ${item.soTien} từ ${item.nguoiChuyen}`);
+  showToast(`Đã xác nhận khớp lệnh giao dịch ${maCK} vào hợp đồng thành công!`, 'success');
+}
+
+function deleteTransfer(maCK) {
+  const perm = (CURRENT_USER && ROLE_PERMISSIONS[CURRENT_USER.role]) ? ROLE_PERMISSIONS[CURRENT_USER.role] : ROLE_PERMISSIONS.admin;
+  if (!perm.canDelete) {
+    showToast("⛔ Bạn không có quyền xóa chứng từ chuyển khoản! Chỉ Giám Đốc mới có quyền xóa.", "error");
+    return;
+  }
+  if (!confirm(`Bạn có chắc chắn muốn xóa giao dịch chuyển khoản ${maCK} không?`)) return;
+  CHUYEN_KHOAN = CHUYEN_KHOAN.filter(x => x.maCK !== maCK);
+  try { localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN)); } catch(e){}
+  renderTableChuyenKhoan();
+  logSystemActivity('XÓA CHUYỂN KHOẢN', `Mã ${maCK}`, 'Xóa giao dịch khỏi sổ theo dõi ngân hàng');
+  showToast(`Đã xóa giao dịch ${maCK}!`, 'info');
+}
+
+
 // --- TRUNG TÂM CÀI ĐẶT DOANH NGHIỆP THƯƠNG MẠI ---
 function renderCaiDat() {
   initBankSelectOptions();
@@ -2547,6 +2920,10 @@ function resetDefaultDemoData() {
 
 // --- HỆ THỐNG MODAL THÊM / CHỈNH SỬA DỮ LIỆU DÙNG CHUNG (CRUD CHỐNG ĐƠ) ---
 function openEditModal(sheetName, idVal) {
+  if (CURRENT_USER && CURRENT_USER.canEdit === false) {
+    showToast("⛔ Bạn không có quyền chỉnh sửa dữ liệu! Vui lòng liên hệ Quản trị viên.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   if (!cfg) return;
 
@@ -2593,6 +2970,10 @@ function openEditModal(sheetName, idVal) {
 }
 
 function openAddModal(sheetName) {
+  if (CURRENT_USER && CURRENT_USER.canAdd === false) {
+    showToast("⛔ Bạn không có quyền thêm mới dữ liệu! Vui lòng liên hệ Quản trị viên.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   if (!cfg) return;
 
@@ -2682,13 +3063,20 @@ function submitCrudModal() {
       .apiSaveRecord(sheetName, recordData, cfg.idCol);
   }
 
+  logSystemActivity((isEdit ? 'SỬA ' : 'THÊM ') + (cfg.title || sheetName).toUpperCase(), `${cfg.title} (${idVal})`, `Cập nhật dữ liệu vào bảng ${sheetName}`);
   showToast("Đã lưu " + cfg.title + " (" + idVal + ") thành công!", "success");
 }
 
 function confirmDelete(sheetName, idCol, idVal) {
+  if (CURRENT_USER && CURRENT_USER.canDelete === false) {
+    showToast("⛔ Bạn không có quyền xóa dữ liệu này! Chỉ tài khoản có quyền Xóa mới được thực hiện.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   const title = cfg ? cfg.title : sheetName;
   if (!confirm(`Bạn có chắc chắn muốn xóa ${title} (${idVal}) không?`)) return;
+
+  logSystemActivity('XÓA DỮ LIỆU', `${title} (${idVal})`, `Xóa bản ghi ${idCol}: ${idVal} khỏi bảng ${sheetName}`);
 
   if (STORE[sheetName]) {
     STORE[sheetName] = STORE[sheetName].filter(x => String(x[idCol]) !== String(idVal));

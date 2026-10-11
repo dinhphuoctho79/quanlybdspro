@@ -432,30 +432,127 @@ document.addEventListener('click', function(e) {
           <span id="dashboard-filter-label" class="text-slate-400 text-[11px] font-medium hidden sm:inline">Tất cả thời gian</span>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-[#14532d] text-white flex items-center justify-center text-lg"><i class="fa fa-city"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">TỔNG DỰ ÁN</p><h3 id="kpi-duan" class="text-lg font-black text-slate-800">12</h3><p class="text-[9px] text-slate-400">dự án đang quản lý</p></div>
+        <!-- THANH ĐIỀU HÀNH TRUNG TÂM LED 3D (CYBER COMMAND BAR) -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#0b1329] via-[#0f172a] to-[#062419] border border-emerald-500/30 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.3)] text-white flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 text-lg shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+              <i class="fa fa-gauge-high animate-pulse"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-black text-sm tracking-wide text-white uppercase flex items-center gap-1.5">
+                  <span>TRUNG TÂM ĐIỀU HÀNH TRỰC QUAN LED 3D</span>
+                </h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> LIVE 3D
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Giám sát tổng thể doanh thu, tồn kho giỏ hàng và biến động chuyển khoản Napas 247</p>
+            </div>
           </div>
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-blue-600 text-white flex items-center justify-center text-lg"><i class="fa fa-shapes"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">TỔNG LÔ ĐẤT</p><h3 id="kpi-lodat" class="text-lg font-black text-slate-800">60</h3><p class="text-[9px] text-slate-400">14 có sẵn | 14 đã bán</p></div>
+
+          <!-- ĐỒNG HỒ ĐIỆN TỬ LED THỜI GIAN THỰC -->
+          <div class="flex items-center gap-2">
+            <div class="px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-emerald-500/40 shadow-inner flex items-center gap-2 font-mono text-emerald-400 text-xs font-black">
+              <i class="fa fa-clock text-amber-400"></i>
+              <span id="led-live-clock">--:--:--</span>
+            </div>
+            <button onclick="refreshDashboardData()" class="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+              <i class="fa fa-arrows-rotate"></i> Làm Mới
+            </button>
           </div>
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-emerald-600 text-white flex items-center justify-center text-lg"><i class="fa fa-arrow-trend-up"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">TỔNG DOANH THU</p><h3 id="kpi-doanhthu" class="text-lg font-black text-slate-800">29.7 tỷ</h3><p class="text-[9px] text-slate-400">VNĐ</p></div>
+        </div>
+
+        <!-- 6 THẺ CHỈ SỐ KPI LED 3D ĐA CHIỀU PHÁT SÁNG NỔI KHỐI -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          <!-- THẺ 1: TỔNG DỰ ÁN (LED CYBER BLUE) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-cyan-500/40 shadow-[0_8px_25px_-5px_rgba(6,182,212,0.3)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-cyan-500/10 blur-xl group-hover:bg-cyan-500/25 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-cyan-300">TỔNG DỰ ÁN</span>
+              <div class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 text-xs shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                <i class="fa fa-city"></i>
+              </div>
+            </div>
+            <h3 id="kpi-duan" class="text-2xl font-black font-mono tracking-tight text-white drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">12</h3>
+            <p class="text-[10px] text-cyan-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> 12 dự án phân lô
+            </p>
           </div>
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-amber-600 text-white flex items-center justify-center text-lg"><i class="fa fa-arrow-trend-down"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">TỔNG CHI PHÍ</p><h3 id="kpi-chiphi" class="text-lg font-black text-slate-800">14.5 tỷ</h3><p class="text-[9px] text-slate-400">VNĐ</p></div>
+
+          <!-- THẺ 2: TỔNG LÔ ĐẤT (LED EMERALD GREEN) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-emerald-500/40 shadow-[0_8px_25px_-5px_rgba(16,185,129,0.3)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-emerald-500/10 blur-xl group-hover:bg-emerald-500/25 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-300">TỔNG LÔ ĐẤT</span>
+              <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-xs shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                <i class="fa fa-shapes"></i>
+              </div>
+            </div>
+            <h3 id="kpi-lodat" class="text-2xl font-black font-mono tracking-tight text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]">60</h3>
+            <p class="text-[10px] text-emerald-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 14 có sẵn | 14 đã bán
+            </p>
           </div>
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-[#14532d] text-white flex items-center justify-center text-lg"><i class="fa fa-building-columns"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">LỢI NHUẬN</p><h3 id="kpi-loinhuan" class="text-lg font-black text-slate-800">15.2 tỷ</h3><p class="text-[9px] text-slate-400">Doanh thu - Chi phí</p></div>
+
+          <!-- THẺ 3: DOANH THU (LED GOLDEN AMBER) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-amber-500/40 shadow-[0_8px_25px_-5px_rgba(245,158,11,0.3)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-amber-500/10 blur-xl group-hover:bg-amber-500/25 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-amber-300">TỔNG DOANH THU</span>
+              <div class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-xs shadow-[0_0_10px_rgba(245,158,11,0.4)]">
+                <i class="fa fa-arrow-trend-up"></i>
+              </div>
+            </div>
+            <h3 id="kpi-doanhthu" class="text-2xl font-black font-mono tracking-tight text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]">29.7 tỷ</h3>
+            <p class="text-[10px] text-amber-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Dòng tiền thu về VNĐ
+            </p>
           </div>
-          <div class="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-amber-700/80 text-white flex items-center justify-center text-lg"><i class="fa fa-users"></i></div>
-            <div><p class="text-[10px] text-slate-400 font-bold uppercase">KHÁCH HÀNG</p><h3 id="kpi-khachhang" class="text-lg font-black text-slate-800">55</h3><p class="text-[9px] text-slate-400">55 giao dịch</p></div>
+
+          <!-- THẺ 4: CHI PHÍ (LED RUBY ROSE) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-rose-500/40 shadow-[0_8px_25px_-5px_rgba(244,63,94,0.3)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-rose-500/10 blur-xl group-hover:bg-rose-500/25 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-rose-300">TỔNG CHI PHÍ</span>
+              <div class="w-7 h-7 rounded-lg bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-300 text-xs shadow-[0_0_10px_rgba(244,63,94,0.4)]">
+                <i class="fa fa-arrow-trend-down"></i>
+              </div>
+            </div>
+            <h3 id="kpi-chiphi" class="text-2xl font-black font-mono tracking-tight text-rose-300 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]">14.5 tỷ</h3>
+            <p class="text-[10px] text-rose-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Vốn & vận hành sàn
+            </p>
+          </div>
+
+          <!-- THẺ 5: LỢI NHUẬN RÒNG (LED VIBRANT LIME) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-lime-500/50 shadow-[0_8px_25px_-5px_rgba(132,204,22,0.35)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-lime-500/15 blur-xl group-hover:bg-lime-500/30 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-lime-300">LỢI NHUẬN RÒNG</span>
+              <div class="w-7 h-7 rounded-lg bg-lime-500/20 border border-lime-400/40 flex items-center justify-center text-lime-300 text-xs shadow-[0_0_10px_rgba(132,204,22,0.4)]">
+                <i class="fa fa-sack-dollar"></i>
+              </div>
+            </div>
+            <h3 id="kpi-loinhuan" class="text-2xl font-black font-mono tracking-tight text-lime-300 drop-shadow-[0_0_10px_rgba(132,204,22,0.7)]">15.2 tỷ</h3>
+            <p class="text-[10px] text-lime-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-lime-400"></span> Tỷ suất sinh lời cao
+            </p>
+          </div>
+
+          <!-- THẺ 6: KHÁCH HÀNG & GIAO DỊCH (LED NEON PURPLE) -->
+          <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900/90 to-slate-950 border border-purple-500/40 shadow-[0_8px_25px_-5px_rgba(168,85,247,0.3)] hover:-translate-y-1 transition-all duration-300 group">
+            <div class="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-purple-500/10 blur-xl group-hover:bg-purple-500/25 transition"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-black uppercase tracking-wider text-purple-300">KHÁCH HÀNG</span>
+              <div class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300 text-xs shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                <i class="fa fa-users"></i>
+              </div>
+            </div>
+            <h3 id="kpi-khachhang" class="text-2xl font-black font-mono tracking-tight text-purple-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">55</h3>
+            <p class="text-[10px] text-purple-200/70 mt-1 flex items-center gap-1 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> 55 hợp đồng chốt
+            </p>
           </div>
         </div>
 
@@ -705,21 +802,56 @@ document.addEventListener('click', function(e) {
       </section>
 
       <!-- ================= 6. QUẢN LÝ GIAO DỊCH ================= -->
-      <section id="view-giaodich" class="hidden bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-3.5 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-2">
-          <span class="font-bold text-xs text-slate-700 flex items-center gap-2"><i class="fa fa-file-invoice-dollar text-amber-600"></i> Danh Sách Giao Dịch</span>
-          <div class="flex items-center gap-3">
-            <input type="text" id="search-giaodich-table" placeholder="Tìm kiếm giao dịch..." oninput="renderTableGiaoDich()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
-            <button onclick="openAddModal('GiaoDich')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="fa fa-circle-plus text-amber-300"></i> Thêm Giao Dịch</button>
+      <section id="view-giaodich" class="hidden space-y-4">
+        <!-- 1. BẢNG GIAO DỊCH HỢP ĐỒNG ĐẶT CỌC -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-3.5 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-2">
+            <span class="font-bold text-xs text-slate-700 flex items-center gap-2">
+              <i class="fa fa-file-invoice-dollar text-emerald-700"></i> Danh Sách Giao Dịch Đặt Cọc & Mua Bán
+            </span>
+            <div class="flex items-center gap-3">
+              <input type="text" id="search-giaodich-table" placeholder="Tìm kiếm giao dịch..." oninput="renderTableGiaoDich()" class="border px-3 py-1 text-xs rounded w-60 focus:outline-slate-400">
+              <button onclick="openAddModal('GiaoDich')" class="bg-[#14532d] hover:bg-[#166534] text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap">
+                <i class="fa fa-circle-plus text-amber-300"></i> Thêm Giao Dịch
+              </button>
+            </div>
+          </div>
+          <div class="overflow-auto">
+            <table class="w-full text-left border-collapse">
+              <thead class="table-header">
+                <tr><th>MÃ GD ↕</th><th>LÔ ĐẤT ↕</th><th>KHÁCH HÀNG ↕</th><th>LOẠI GD ↕</th><th class="text-right">GIÁ TRỊ ↕</th><th>NGÀY GD ↕</th><th>PT THANH TOÁN ↕</th><th class="text-center">TRẠNG THÁI ↕</th><th class="text-center">THAO TÁC</th></tr>
+              </thead>
+              <tbody id="tbody-giaodich" class="table-body"></tbody>
+            </table>
           </div>
         </div>
-        <div class="overflow-auto">
-          <table class="w-full text-left border-collapse">
-            <thead class="table-header">
-              <tr><th>MÃ GD ↕</th><th>LÔ ĐẤT ↕</th><th>KHÁCH HÀNG ↕</th><th>LOẠI GD ↕</th><th class="text-right">GIÁ TRỊ ↕</th><th>NGÀY GD ↕</th><th>PT THANH TOÁN ↕</th><th class="text-center">TRẠNG THÁI ↕</th><th class="text-center">THAO TÁC</th></tr>
-            </thead>
-            <tbody id="tbody-giaodich" class="table-body"></tbody>
-          </table>
+
+        <!-- 2. BẢNG LỊCH SỬ CHUYỂN KHOẢN NGÂN HÀNG & BIẾN ĐỘNG SỐ DƯ (VIETQR NAPAS 247) -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                <i class="fa fa-money-bill-transfer"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-slate-800">Lịch Sử Chuyển Khoản & Biến Động Số Dư (VietQR Napas 247)</h4>
+                <p class="text-[10px] text-slate-400">Ghi nhận và khớp lệnh tiền cọc từ ứng dụng ngân hàng của khách hàng</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openAddTransferModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow flex items-center gap-1.5 cursor-pointer transition">
+                <i class="fa fa-plus"></i> Ghi Nhận Chuyển Khoản
+              </button>
+            </div>
+          </div>
+          <div class="overflow-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="table-header bg-slate-100">
+                <tr><th>MÃ GD / REF ↕</th><th>NGÂN HÀNG ↕</th><th>TÀI KHOẢN NHẬN ↕</th><th>NGƯỜI CHUYỂN ↕</th><th class="text-right">SỐ TIỀN ↕</th><th>NỘI DUNG CHUYỂN KHOẢN ↕</th><th>THỜI GIAN ↕</th><th class="text-center">TRẠNG THÁI ↕</th><th class="text-center">THAO TÁC</th></tr>
+              </thead>
+              <tbody id="tbody-chuyenkhoan" class="table-body"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1282,6 +1414,42 @@ document.addEventListener('click', function(e) {
             </div>
           </div>
 
+          <!-- CARD 6: NHẬT KÝ THAO TÁC & LỊCH SỬ THAY ĐỔI HỆ THỐNG (AUDIT LOG) -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5 md:col-span-2">
+            <div class="flex items-center justify-between border-b pb-2 text-slate-800 font-bold text-xs">
+              <div class="flex items-center gap-2">
+                <i class="fa fa-clock-rotate-left text-indigo-600"></i>
+                <span>6. Nhật Ký Thao Tác & Lịch Sử Thay Đổi Hệ Thống (Audit Trail)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="clearAuditLogs()" class="text-slate-400 hover:text-rose-600 text-[11px] font-semibold cursor-pointer">
+                  <i class="fa fa-trash-can"></i> Xóa lịch sử
+                </button>
+                <span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded border border-indigo-200">
+                  Minh Bạch 100%
+                </span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500">
+              Ghi vết tự động tất cả các thao tác thay đổi dữ liệu (Thêm, Sửa, Xóa, Đặt cọc, Đổi mật khẩu, Cập nhật Logo, Ngân hàng) theo từng người dùng.
+            </p>
+            <div class="overflow-x-auto max-h-72 border border-slate-200 rounded-lg">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="table-header bg-slate-100 sticky top-0">
+                  <tr>
+                    <th>THỜI GIAN</th>
+                    <th>NGƯỜI THỰC HIỆN</th>
+                    <th>VAI TRÒ</th>
+                    <th>HÀNH ĐỘNG</th>
+                    <th>ĐỐI TƯỢNG</th>
+                    <th>CHI TIẾT THAY ĐỔI</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-audit-logs" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- CARD 5: QUẢN TRỊ DỮ LIỆU & SAO LƯU -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3.5 md:col-span-2">
             <div class="flex items-center justify-between border-b pb-2 text-slate-800 font-bold text-xs">
@@ -1331,7 +1499,53 @@ document.addEventListener('click', function(e) {
   </div>
 
   
-      <!-- ================= MODAL XEM MÃ VIETQR PHÓNG TO ================= -->
+      <!-- ================= MODAL GHI NHẬN CHUYỂN KHOẢN MỚI ================= -->
+  <div id="transfer-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-[100000] hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden flex flex-col animate-slide-up">
+      <div class="bg-[#14532d] text-white p-4 flex items-center justify-between">
+        <h3 class="font-extrabold text-sm flex items-center gap-2">
+          <i class="fa fa-money-bill-transfer text-amber-300"></i> Ghi Nhận Giao Dịch Chuyển Khoản Mới
+        </h3>
+        <button onclick="closeTransferModal()" class="text-white hover:text-slate-200 cursor-pointer"><i class="fa fa-times"></i></button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mã Giao Dịch / Mã Bill Chuyển Khoản</label>
+          <input type="text" id="inp-transfer-ref" placeholder="VD: MB-8927163" class="w-full border rounded-lg px-3 py-1.5 font-mono font-bold text-slate-800 bg-slate-50 focus:bg-white">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ngân Hàng Nhận</label>
+            <input type="text" id="inp-transfer-bank" value="MB Bank" class="w-full border rounded-lg px-3 py-1.5 font-bold text-slate-800 bg-slate-50 focus:bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Số Tài Khoản Nhận</label>
+            <input type="text" id="inp-transfer-stk" value="0393990638" class="w-full border rounded-lg px-3 py-1.5 font-mono font-bold text-slate-800 bg-slate-50 focus:bg-white">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Họ Tên Người Chuyển (Khách Hàng) <span class="text-red-500">*</span></label>
+          <input type="text" id="inp-transfer-sender" placeholder="VD: NGUYEN VAN A" class="w-full border rounded-lg px-3 py-1.5 font-bold uppercase text-slate-800 bg-slate-50 focus:bg-white">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Số Tiền Đã Chuyển (VNĐ) <span class="text-red-500">*</span></label>
+          <input type="number" id="inp-transfer-amount" value="50000000" step="5000000" class="w-full border rounded-lg px-3 py-1.5 font-mono font-bold text-emerald-800 bg-slate-50 focus:bg-white">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nội Dung Chuyển Khoản / Lô Đất Cọc</label>
+          <input type="text" id="inp-transfer-memo" placeholder="VD: COC LO A1 MEKONG RIVERSIDE" class="w-full border rounded-lg px-3 py-1.5 text-slate-800 bg-slate-50 focus:bg-white">
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button onclick="closeTransferModal()" class="px-4 py-1.5 border rounded-lg text-slate-600 font-bold text-xs hover:bg-slate-100 cursor-pointer">Hủy</button>
+        <button onclick="submitNewTransfer()" class="px-5 py-1.5 bg-[#14532d] hover:bg-[#166534] text-white font-bold text-xs rounded-lg shadow cursor-pointer flex items-center gap-1.5">
+          <i class="fa fa-check"></i> Lưu Chuyển Khoản
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL XEM MÃ VIETQR PHÓNG TO ================= -->
   <div id="large-qr-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100000] hidden p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 overflow-hidden flex flex-col animate-slide-up text-center">
       <div class="bg-[#14532d] text-white p-4 flex items-center justify-between">
@@ -1552,20 +1766,115 @@ document.addEventListener('click', function(e) {
           </div>
         </div>
 
-        <!-- 2. Chọn Quyền Hạn / Vai Trò -->
-        <div class="bg-blue-50/60 p-3.5 rounded-xl border border-blue-200 space-y-2">
-          <label class="block font-bold text-blue-900 mb-1 flex items-center justify-between">
-            <span>Cấp Vai Trò & Quyền Hạn Hệ Thống <span class="text-red-500">*</span></span>
-            <span class="text-[10px] text-blue-700 font-normal">Quyết định các tab được truy cập</span>
-          </label>
-          <select id="rbac-select-role" onchange="previewRolePermissions(this.value)" class="w-full border rounded-xl px-3 py-2 text-sm font-bold text-slate-800 bg-white border-blue-300 focus:outline-blue-600">
-            <option value="admin">👑 Giám Đốc (Toàn quyền 12/12 chức năng & quản trị)</option>
-            <option value="truongphong">💼 Trưởng Phòng (Quản lý dự án, giỏ hàng, nhân viên, hoa hồng, báo cáo)</option>
-            <option value="sale" selected>🎯 Chuyên Viên Sale (Xem giỏ hàng, bản đồ, đặt cọc, khách hàng, hoa hồng cá nhân)</option>
-            <option value="ketoan">📊 Kế Toán (Quản lý thu chi, công nợ, giao dịch, hoa hồng, báo cáo)</option>
+        <!-- 2. Mẫu Vai Trò & Phân Quyền Chọn Mục -->
+        <div class="bg-blue-50/70 p-4 rounded-xl border border-blue-200 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <label class="block font-extrabold text-blue-950 text-xs flex items-center gap-1.5">
+              <i class="fa fa-sliders text-blue-600"></i> MẪU VAI TRÒ HỆ THỐNG
+            </label>
+            <span class="text-[10px] text-blue-700 font-semibold">Chọn mẫu nhanh hoặc tùy biến từng mục</span>
+          </div>
+
+          <select id="rbac-select-role" onchange="onRoleTemplateChange(this.value)" class="w-full border rounded-xl px-3 py-2 text-xs font-bold text-slate-800 bg-white border-blue-300 focus:outline-blue-600 shadow-2xs">
+            <option value="admin">👑 Giám Đốc (Toàn quyền 12/12 chức năng & Quản trị cao nhất)</option>
+            <option value="truongphong">💼 Trưởng Phòng (9/12 chức năng: Dự án, Giỏ hàng, Nhân sự, Báo cáo)</option>
+            <option value="sale" selected>🎯 Sale BĐS (5/12 chức năng: Lô đất, Bản đồ, Khách hàng, Cọc, Hoa hồng)</option>
+            <option value="ketoan">📊 Kế Toán (7/12 chức năng: Doanh thu, Chi phí, Khách hàng, Cọc, Báo cáo)</option>
+            <option value="custom">⚙️ Tùy Biến Nâng Cao (Admin tự tích chọn từng mục bên dưới)</option>
           </select>
-          <div id="rbac-role-desc" class="text-[11px] text-slate-600 bg-white p-2.5 rounded-lg border border-blue-100 leading-relaxed">
-            <!-- Mô tả quyền hạn điền động qua JS -->
+
+          <!-- 12 CHECKBOXES CHO 12 DANH MỤC TÍNH NĂNG -->
+          <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-2xs space-y-2.5">
+            <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+              <span class="font-extrabold text-slate-800 text-[11px] flex items-center gap-1.5">
+                <i class="fa fa-list-check text-emerald-600"></i> DANH MỤC TÍNH NĂNG ĐƯỢC PHÉP TRUY CẬP:
+                <span id="rbac-count-selected" class="ml-1 px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-black text-[10px]">12/12</span>
+              </span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="selectAllRbacTabs(true)" class="px-2 py-0.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded text-[10px] font-bold cursor-pointer transition">
+                  <i class="fa fa-check-double"></i> Chọn Hết
+                </button>
+                <button type="button" onclick="selectAllRbacTabs(false)" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold cursor-pointer transition">
+                  <i class="fa fa-times"></i> Bỏ Hết
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]" id="rbac-tab-checkboxes-container">
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-dashboard" data-tab="dashboard" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-th-large text-indigo-500 w-3.5"></i> Dashboard 3D</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-duan" data-tab="duan" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-city text-emerald-600 w-3.5"></i> Dự Án</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-lodat" data-tab="lodat" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-shapes text-amber-500 w-3.5"></i> Lô Đất</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-map" data-tab="map" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-map text-red-500 w-3.5"></i> Bản Đồ Lô</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-khachhang" data-tab="khachhang" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-users text-teal-600 w-3.5"></i> Khách Hàng</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-giaodich" data-tab="giaodich" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-file-invoice-dollar text-violet-600 w-3.5"></i> Giao Dịch</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-doanhthu" data-tab="doanhthu" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-arrow-trend-up text-emerald-600 w-3.5"></i> Doanh Thu</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-chiphi" data-tab="chiphi" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-arrow-trend-down text-rose-500 w-3.5"></i> Chi Phí</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-nhanvien" data-tab="nhanvien" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-user-tie text-blue-600 w-3.5"></i> Nhân Viên</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-hoahong" data-tab="hoahong" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-hand-holding-dollar text-amber-600 w-3.5"></i> Hoa Hồng</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-baocao" data-tab="baocao" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-chart-pie text-cyan-600 w-3.5"></i> Báo Cáo</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-blue-50/50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-tab-caidat" data-tab="caidat" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-blue-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-gear text-slate-600 w-3.5"></i> Cài Đặt HT</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- QUYỀN THAO TÁC NGHIỆP VỤ (CRUD & ADMIN) -->
+          <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-2xs space-y-2">
+            <span class="font-extrabold text-slate-800 text-[11px] flex items-center gap-1.5">
+              <i class="fa fa-shield-virus text-blue-600"></i> QUYỀN THAO TÁC NGHIỆP VỤ (KHÓA NÚT THAO TÁC):
+            </span>
+            <div class="grid grid-cols-2 gap-2 text-[11px]">
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-action-add" onchange="onCustomCheckboxChange()" checked class="w-4 h-4 text-emerald-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-circle-plus text-emerald-600"></i> Thêm mới dữ liệu</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-action-edit" onchange="onCustomCheckboxChange()" checked class="w-4 h-4 text-amber-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-pen text-amber-600"></i> Sửa / Cập nhật dữ liệu</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-action-delete" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-rose-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-trash-can text-rose-600"></i> Xóa dữ liệu (Bảo mật)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer select-none">
+                <input type="checkbox" id="rbac-action-manage" onchange="onCustomCheckboxChange()" class="w-4 h-4 text-purple-600 rounded">
+                <span class="font-bold text-slate-700"><i class="fa fa-user-shield text-purple-600"></i> Quản trị viên (Cấp quyền)</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -1744,6 +2053,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-amber-100 text-amber-800',
     avatarBg: 'bg-amber-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: true,
     canDelete: true,
@@ -1754,6 +2064,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-purple-100 text-purple-800',
     avatarBg: 'bg-purple-600',
     allowedTabs: ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'nhanvien', 'hoahong', 'baocao'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: true,
@@ -1764,6 +2075,7 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-emerald-100 text-emerald-800',
     avatarBg: 'bg-emerald-600',
     allowedTabs: ['lodat', 'map', 'khachhang', 'giaodich', 'hoahong'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: false,
@@ -1774,6 +2086,18 @@ const ROLE_PERMISSIONS = {
     badgeClass: 'bg-blue-100 text-blue-800',
     avatarBg: 'bg-blue-600',
     allowedTabs: ['dashboard', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'hoahong', 'baocao'],
+    canAdd: true,
+    canEdit: true,
+    canEditConfig: false,
+    canDelete: false,
+    canManageUsers: false
+  },
+  custom: {
+    name: 'Tùy Biến',
+    badgeClass: 'bg-indigo-100 text-indigo-800',
+    avatarBg: 'bg-indigo-600',
+    allowedTabs: ['lodat', 'map', 'khachhang'],
+    canAdd: true,
     canEdit: true,
     canEditConfig: false,
     canDelete: false,
@@ -1866,54 +2190,117 @@ function applyUserPermissions(user) {
     return;
   }
   CURRENT_USER = user;
-  const perm = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.admin;
+  const rolePerm = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.admin;
+
+  // Quyền hạn thực tế (ưu tiên quyền riêng được cấp chọn mục, nếu không dùng mặc định của vai trò)
+  const allowedTabs = (user.allowedTabs && user.allowedTabs.length > 0) ? user.allowedTabs : rolePerm.allowedTabs;
+  CURRENT_USER.allowedTabs = allowedTabs;
+  CURRENT_USER.canAdd = user.canAdd !== undefined ? user.canAdd : (rolePerm.canAdd !== false);
+  CURRENT_USER.canEdit = user.canEdit !== undefined ? user.canEdit : (rolePerm.canEdit !== false);
+  CURRENT_USER.canDelete = user.canDelete !== undefined ? user.canDelete : (rolePerm.canDelete === true);
+  CURRENT_USER.canManageUsers = user.canManageUsers !== undefined ? user.canManageUsers : (rolePerm.canManageUsers === true);
+
+  const roleName = user.role === 'custom' ? 'Tùy Biến' : rolePerm.name;
+  const badgeClass = rolePerm.badgeClass;
+  const avatarBg = rolePerm.avatarBg;
 
   // Cập nhật Header
   const avatarEl = document.getElementById('user-avatar');
   if (avatarEl) {
     avatarEl.innerText = user.avatarInitials;
-    avatarEl.className = `w-7 h-7 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white`;
+    avatarEl.className = `w-7 h-7 rounded-full ${avatarBg} text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-white`;
   }
   const nameEl = document.getElementById('user-display-name');
   if (nameEl) nameEl.innerText = user.fullName;
   const badgeEl = document.getElementById('user-role-badge');
   if (badgeEl) {
-    badgeEl.innerText = perm.name;
-    badgeEl.className = `text-[9px] font-bold ${perm.badgeClass} px-1.5 py-0.2 rounded-full inline-block mt-0.5`;
+    badgeEl.innerText = roleName;
+    badgeEl.className = `text-[9px] font-bold ${badgeClass} px-1.5 py-0.2 rounded-full inline-block mt-0.5`;
   }
 
   // Cập nhật Menu dropdown
   const menuAvatar = document.getElementById('menu-avatar-large');
   if (menuAvatar) {
     menuAvatar.innerText = user.avatarInitials;
-    menuAvatar.className = `w-9 h-9 rounded-full ${perm.avatarBg} text-white font-extrabold flex items-center justify-center text-sm shadow-md`;
+    menuAvatar.className = `w-9 h-9 rounded-full ${avatarBg} text-white font-extrabold flex items-center justify-center text-sm shadow-md`;
   }
   const menuName = document.getElementById('menu-user-fullname');
   if (menuName) menuName.innerText = user.fullName;
   const menuTitle = document.getElementById('menu-user-title');
-  if (menuTitle) menuTitle.innerText = user.title;
-  const menuDept = document.getElementById('menu-user-dept');
-  if (menuDept) menuDept.innerText = user.department;
+  if (menuTitle) menuTitle.innerText = user.title || roleName;
   const menuRoleBadge = document.getElementById('menu-user-role-badge');
   if (menuRoleBadge) {
-    menuRoleBadge.innerText = perm.name;
-    menuRoleBadge.className = `text-[10px] font-bold ${perm.badgeClass} px-2 py-0.5 rounded-full inline-block`;
+    menuRoleBadge.innerText = roleName;
+    menuRoleBadge.className = `text-[10px] font-bold ${badgeClass} px-2 py-0.5 rounded-full inline-block`;
   }
 
   // Cập nhật nút quản trị
   const adminMenuSection = document.getElementById('menu-admin-section');
   if (adminMenuSection) {
-    adminMenuSection.style.display = perm.canManageUsers ? 'block' : 'none';
+    adminMenuSection.style.display = CURRENT_USER.canManageUsers ? 'block' : 'none';
   }
 
-  // Cập nhật giao diện theo quyền
-  applyPermissionRestrictions(perm);
+  // 1. KHÓA / ẨN CÁC TÍNH NĂNG TRÊN THANH SIDEBAR
+  const allTabs = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+  allTabs.forEach(t => {
+    const btn = document.getElementById('btn-tab-' + t);
+    if (btn) {
+      if (allowedTabs.includes(t)) {
+        btn.style.display = '';
+        btn.classList.remove('hidden');
+      } else {
+        btn.style.display = 'none';
+        btn.classList.add('hidden');
+      }
+    }
+  });
+
+  // 2. ẨN TIÊU ĐỀ CHUYÊN MỤC TRÊN SIDEBAR NẾU TẤT CẢ MỤC CON BỊ KHÓA
+  const categoryMap = [
+    { title: 'TỔNG QUAN', tabs: ['dashboard'] },
+    { title: 'QUẢN LÝ DỰ ÁN', tabs: ['duan', 'lodat', 'map'] },
+    { title: 'KINH DOANH', tabs: ['khachhang', 'giaodich'] },
+    { title: 'TÀI CHÍNH', tabs: ['doanhthu', 'chiphi'] },
+    { title: 'NHÂN SỰ', tabs: ['nhanvien', 'hoahong'] },
+    { title: 'BÁO CÁO & CÀI ĐẶT', tabs: ['baocao', 'caidat'] }
+  ];
+  document.querySelectorAll('.sidebar-category').forEach(catEl => {
+    const catText = catEl.innerText.trim();
+    const group = categoryMap.find(g => g.title === catText);
+    if (group) {
+      const hasAny = group.tabs.some(t => allowedTabs.includes(t));
+      catEl.style.display = hasAny ? '' : 'none';
+    }
+  });
+
+  // 3. KHÓA / ẨN ĐIỀU HƯỚNG DƯỚI ĐÁY ĐIỆN THOẠI (BOTTOM NAV)
+  const bnavTabs = ['dashboard', 'duan', 'map', 'lodat'];
+  bnavTabs.forEach(t => {
+    const b = document.getElementById('bnav-' + t);
+    if (b) {
+      b.style.display = allowedTabs.includes(t) ? '' : 'none';
+    }
+  });
+
+  // 4. KIỂM TRA TAB HIỆN TẠI - NẾU BỊ KHÓA THÌ CHUYỂN NGAY SANG TAB ĐƯỢC PHÉP ĐẦU TIÊN
+  const currentActiveTab = allTabs.find(t => {
+    const v = document.getElementById('view-' + t);
+    return v && !v.classList.contains('hidden');
+  });
+  if (!currentActiveTab || !allowedTabs.includes(currentActiveTab)) {
+    const firstAllowed = allowedTabs[0] || 'lodat';
+    switchTab(firstAllowed);
+  }
+
+  // 5. CẬP NHẬT CÁC NÚT THAO TÁC NGHIỆP VỤ (THÊM, SỬA, XÓA, PHÂN QUYỀN)
+  applyPermissionRestrictions(CURRENT_USER);
 }
 
-function applyPermissionRestrictions(perm) {
-  if (!perm) return;
-  const canEdit = perm.canEdit !== false;
-  const canDelete = perm.canDelete === true;
+function applyPermissionRestrictions(userOrPerm) {
+  const canAdd = userOrPerm ? (userOrPerm.canAdd !== false) : true;
+  const canEdit = userOrPerm ? (userOrPerm.canEdit !== false) : true;
+  const canDelete = userOrPerm ? (userOrPerm.canDelete === true) : false;
+  const canManage = userOrPerm ? (userOrPerm.canManageUsers === true) : false;
 
   // Ẩn/hiện nút xóa
   document.querySelectorAll('.btn-action-delete').forEach(btn => {
@@ -1923,15 +2310,14 @@ function applyPermissionRestrictions(perm) {
   document.querySelectorAll('.btn-action-edit').forEach(btn => {
     btn.style.display = canEdit ? '' : 'none';
   });
-  // Ẩn/hiện nút thêm mới dữ liệu (Dự Án, Khách Hàng, Lô Đất, Giao Dịch...)
-  document.querySelectorAll('button[onclick*="openAddModal"]').forEach(btn => {
-    btn.style.display = canEdit ? '' : 'none';
+  // Ẩn/hiện nút thêm mới dữ liệu
+  document.querySelectorAll('button[onclick*="openAddModal"], button[onclick*="openModal"], button[onclick*="showAdd"]').forEach(btn => {
+    btn.style.display = canAdd ? '' : 'none';
   });
   // Ẩn/hiện nút cấp quyền nhân viên
-  const btnRbac = document.querySelector('button[onclick*="openEmployeeRbacModal()"]');
-  if (btnRbac) {
-    btnRbac.style.display = perm.canManageUsers ? '' : 'none';
-  }
+  document.querySelectorAll('button[onclick*="openEmployeeRbacModal"]').forEach(btn => {
+    btn.style.display = canManage ? '' : 'none';
+  });
 }
 
 
@@ -3241,6 +3627,32 @@ function switchTab(tabId) {
   closeMobileSidebar();
 
   const tabs = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+
+  // BẢO VỆ PHÂN QUYỀN CHẶT CHẼ: CHẶN TRUY CẬP NẾU TÀI KHOẢN BỊ KHÓA MỤC NÀY
+  if (CURRENT_USER) {
+    const allowedTabs = CURRENT_USER.allowedTabs || (ROLE_PERMISSIONS[CURRENT_USER.role] ? ROLE_PERMISSIONS[CURRENT_USER.role].allowedTabs : ['lodat', 'map']);
+    if (!allowedTabs.includes(tabId)) {
+      const tabNames = {
+        dashboard: 'Bảng Điều Khiển', duan: 'Quản Lý Dự Án', lodat: 'Quản Lý Lô Đất', map: 'Bản Đồ Lô Đất',
+        khachhang: 'Quản Lý Khách Hàng', giaodich: 'Quản Lý Giao Dịch', doanhthu: 'Quản Lý Doanh Thu',
+        chiphi: 'Quản Lý Chi Phí', nhanvien: 'Quản Lý Nhân Viên', hoahong: 'Bảng Tính Hoa Hồng',
+        baocao: 'Báo Cáo Tổng Hợp', caidat: 'Cài Đặt Hệ Thống'
+      };
+      showToast(`⛔ BẠN KHÔNG CÓ QUYỀN TRUY CẬP "${tabNames[tabId] || tabId}"! Chức năng này đã bị khóa đối với vai trò của bạn.`, 'error');
+      // Tự động giữ nguyên hoặc chuyển sang tab hợp lệ
+      const firstAllowed = allowedTabs[0] || 'lodat';
+      if (firstAllowed !== tabId) {
+        tabs.forEach(t => {
+          const el = document.getElementById('view-' + t);
+          if (el) el.classList.toggle('hidden', t !== firstAllowed);
+          const btn = document.getElementById('btn-tab-' + t);
+          if (btn) btn.classList.toggle('active', t === firstAllowed);
+        });
+      }
+      return;
+    }
+  }
+
   tabs.forEach(t => {
     const el = document.getElementById('view-' + t);
     if (el) el.classList.toggle('hidden', t !== tabId);
@@ -3590,6 +4002,8 @@ function closeEmployeeRbacModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+const RBAC_ALL_TABS = ['dashboard', 'duan', 'lodat', 'map', 'khachhang', 'giaodich', 'doanhthu', 'chiphi', 'nhanvien', 'hoahong', 'baocao', 'caidat'];
+
 function onSelectRbacEmployee(maNV) {
   const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
   if (!nv) return;
@@ -3600,7 +4014,6 @@ function onSelectRbacEmployee(maNV) {
   let matchedAcc = Object.values(USER_ACCOUNTS).find(acc => acc.username.toLowerCase() === nv.MaNV.toLowerCase() || (nv.HoTen && acc.fullName.toLowerCase() === nv.HoTen.toLowerCase()));
 
   if (!matchedAcc) {
-    // Tự sinh username từ Mã NV hoặc chức vụ
     let defaultRole = 'sale';
     if ((nv.ChucVu || '').toLowerCase().includes('giám đốc')) defaultRole = 'admin';
     else if ((nv.ChucVu || '').toLowerCase().includes('trưởng') || (nv.ChucVu || '').toLowerCase().includes('quản lý')) defaultRole = 'truongphong';
@@ -3609,43 +4022,79 @@ function onSelectRbacEmployee(maNV) {
     document.getElementById('rbac-inp-username').value = nv.MaNV.toLowerCase();
     document.getElementById('rbac-select-role').value = defaultRole;
     document.getElementById('rbac-inp-password').value = '123456';
+    document.getElementById('rbac-chk-active').checked = true;
+
+    onRoleTemplateChange(defaultRole);
   } else {
     document.getElementById('rbac-inp-username').value = matchedAcc.username;
-    document.getElementById('rbac-select-role').value = matchedAcc.role;
+    document.getElementById('rbac-select-role').value = matchedAcc.role || 'custom';
     document.getElementById('rbac-inp-password').value = matchedAcc.password || '123456';
-  }
+    document.getElementById('rbac-chk-active').checked = matchedAcc.isActive !== false;
 
-  previewRolePermissions(document.getElementById('rbac-select-role').value);
+    // Thiết lập tích chọn 12 checkboxes theo allowedTabs đã lưu
+    const userTabs = matchedAcc.allowedTabs || (ROLE_PERMISSIONS[matchedAcc.role] ? ROLE_PERMISSIONS[matchedAcc.role].allowedTabs : ['lodat', 'map']);
+    RBAC_ALL_TABS.forEach(t => {
+      const chk = document.getElementById('rbac-tab-' + t);
+      if (chk) chk.checked = userTabs.includes(t);
+    });
+
+    // Thiết lập tích chọn quyền thao tác
+    const canAdd = matchedAcc.canAdd !== undefined ? matchedAcc.canAdd : (ROLE_PERMISSIONS[matchedAcc.role]?.canAdd !== false);
+    const canEdit = matchedAcc.canEdit !== undefined ? matchedAcc.canEdit : (ROLE_PERMISSIONS[matchedAcc.role]?.canEdit !== false);
+    const canDelete = matchedAcc.canDelete !== undefined ? matchedAcc.canDelete : (ROLE_PERMISSIONS[matchedAcc.role]?.canDelete === true);
+    const canManage = matchedAcc.canManageUsers !== undefined ? matchedAcc.canManageUsers : (ROLE_PERMISSIONS[matchedAcc.role]?.canManageUsers === true);
+
+    document.getElementById('rbac-action-add').checked = canAdd;
+    document.getElementById('rbac-action-edit').checked = canEdit;
+    document.getElementById('rbac-action-delete').checked = canDelete;
+    document.getElementById('rbac-action-manage').checked = canManage;
+
+    updateRbacSelectedCount();
+  }
 }
 
-function previewRolePermissions(roleKey) {
+function onRoleTemplateChange(roleKey) {
+  if (roleKey === 'custom') {
+    updateRbacSelectedCount();
+    return;
+  }
+
   const perm = ROLE_PERMISSIONS[roleKey];
-  const descEl = document.getElementById('rbac-role-desc');
-  if (!descEl || !perm) return;
+  if (!perm) return;
 
-  const tabTitles = {
-    dashboard: 'Bảng Điều Khiển',
-    duan: 'Dự Án',
-    lodat: 'Lô Đất',
-    map: 'Bản Đồ',
-    khachhang: 'Khách Hàng',
-    giaodich: 'Giao Dịch',
-    doanhthu: 'Doanh Thu',
-    chiphi: 'Chi Phí',
-    nhanvien: 'Nhân Viên',
-    hoahong: 'Hoa Hồng',
-    baocao: 'Báo Cáo',
-    caidat: 'Cài Đặt'
-  };
+  // Tự động tích/bỏ tích 12 tab theo vai trò mẫu
+  RBAC_ALL_TABS.forEach(t => {
+    const chk = document.getElementById('rbac-tab-' + t);
+    if (chk) chk.checked = perm.allowedTabs.includes(t);
+  });
 
-  const allowedList = perm.allowedTabs.map(t => `<span class="inline-block bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded text-[10px] font-bold mr-1 mb-1">✓ ${tabTitles[t] || t}</span>`).join('');
+  // Tự động tích các cờ thao tác
+  document.getElementById('rbac-action-add').checked = perm.canAdd !== false;
+  document.getElementById('rbac-action-edit').checked = perm.canEdit !== false;
+  document.getElementById('rbac-action-delete').checked = perm.canDelete === true;
+  document.getElementById('rbac-action-manage').checked = perm.canManageUsers === true;
 
-  descEl.innerHTML = `
-    <div class="space-y-1">
-      <div class="font-bold text-slate-800">Quyền hạn truy cập (${perm.allowedTabs.length}/12 tính năng):</div>
-      <div class="flex flex-wrap pt-1">${allowedList}</div>
-    </div>
-  `;
+  updateRbacSelectedCount();
+}
+
+function onCustomCheckboxChange() {
+  document.getElementById('rbac-select-role').value = 'custom';
+  updateRbacSelectedCount();
+}
+
+function selectAllRbacTabs(isSelectAll) {
+  RBAC_ALL_TABS.forEach(t => {
+    const chk = document.getElementById('rbac-tab-' + t);
+    if (chk) chk.checked = isSelectAll;
+  });
+  document.getElementById('rbac-select-role').value = isSelectAll ? 'admin' : 'custom';
+  updateRbacSelectedCount();
+}
+
+function updateRbacSelectedCount() {
+  const count = RBAC_ALL_TABS.filter(t => document.getElementById('rbac-tab-' + t)?.checked).length;
+  const countEl = document.getElementById('rbac-count-selected');
+  if (countEl) countEl.innerText = count + '/12';
 }
 
 function resetRbacDefaultPassword() {
@@ -3677,9 +4126,22 @@ function saveEmployeeRbacSettings() {
     return;
   }
 
+  // Thu thập danh sách các tab được chọn
+  const selectedTabs = RBAC_ALL_TABS.filter(t => document.getElementById('rbac-tab-' + t)?.checked);
+  if (selectedTabs.length === 0) {
+    alert("⚠️ Vui lòng chọn ít nhất 1 chức năng được phép truy cập!");
+    return;
+  }
+
+  const canAdd = document.getElementById('rbac-action-add').checked;
+  const canEdit = document.getElementById('rbac-action-edit').checked;
+  const canDelete = document.getElementById('rbac-action-delete').checked;
+  const canManageUsers = document.getElementById('rbac-action-manage').checked;
+
   const nv = (STORE.NhanVien || []).find(x => x.MaNV === maNV);
   const fullName = nv ? nv.HoTen : username;
   const initials = fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const roleName = role === 'custom' ? 'Tùy Biến' : (ROLE_PERMISSIONS[role] ? ROLE_PERMISSIONS[role].name : role);
 
   // Cập nhật hoặc tạo mới tài khoản trong USER_ACCOUNTS
   USER_ACCOUNTS[username] = {
@@ -3687,8 +4149,13 @@ function saveEmployeeRbacSettings() {
     password: password,
     fullName: fullName,
     role: role,
+    allowedTabs: selectedTabs,
+    canAdd: canAdd,
+    canEdit: canEdit,
+    canDelete: canDelete,
+    canManageUsers: canManageUsers,
     avatarInitials: initials || 'NV',
-    title: `${ROLE_PERMISSIONS[role].name} (${maNV})`,
+    title: `${roleName} (${maNV})`,
     isActive: isActive
   };
 
@@ -3697,15 +4164,23 @@ function saveEmployeeRbacSettings() {
     localStorage.setItem('bds_custom_accounts', JSON.stringify(USER_ACCOUNTS));
   } catch(e){}
 
+  // Ghi nhật ký hệ thống
+  logSystemActivity(
+    'CẤP QUYỀN CHỌN MỤC',
+    `${fullName} (${maNV})`,
+    `Cấp ${selectedTabs.length}/12 mục: [${selectedTabs.join(', ')}] | Thêm:${canAdd ? 'Có' : 'Không'} | Sửa:${canEdit ? 'Có' : 'Không'} | Xóa:${canDelete ? 'Có' : 'Không'} | QuảnTrị:${canManageUsers ? 'Có' : 'Không'}`
+  );
+
   // Nếu đang cấp quyền cho chính tài khoản đang đăng nhập, áp dụng quyền mới ngay lập tức
-  if (CURRENT_USER.username.toLowerCase() === username.toLowerCase()) {
+  if (CURRENT_USER && CURRENT_USER.username.toLowerCase() === username.toLowerCase()) {
     applyUserPermissions(USER_ACCOUNTS[username]);
   }
 
   closeEmployeeRbacModal();
   renderTableNhanVien();
 
-  alert(`✅ CẤP QUYỀN & ĐẶT MẬT KHẨU THÀNH CÔNG!\n\n• Nhân viên: ${fullName} (${maNV})\n• Tên đăng nhập: ${username}\n• Mật khẩu mới: ${password}\n• Vai trò cấp: ${ROLE_PERMISSIONS[role].name}\n\nNhân viên có thể đăng nhập ngay với thông tin trên!`);
+  showToast(`✅ Đã lưu cấp quyền thành công cho ${fullName}! (${selectedTabs.length}/12 mục)`, 'success');
+  alert(`✅ CẤP QUYỀN CHỌN MỤC THÀNH CÔNG!\n\n• Nhân viên: ${fullName} (${maNV})\n• Tên đăng nhập: ${username}\n• Mật khẩu: ${password}\n• Vai trò: ${roleName}\n• Số tính năng được mở: ${selectedTabs.length}/12 tính năng\n• Quyền thêm: ${canAdd ? 'Có' : 'Khóa'}\n• Quyền sửa: ${canEdit ? 'Có' : 'Khóa'}\n• Quyền xóa: ${canDelete ? 'Có' : 'Khóa'}\n• Quản trị: ${canManageUsers ? 'Có' : 'Khóa'}\n\nNhân viên đăng nhập sẽ chỉ thấy và thao tác đúng các mục được cấp!`);
 }
 
 // ================= ĐỔI MẬT KHẨU CÁ NHÂN =================
@@ -4053,6 +4528,213 @@ function printDepositReceipt() {
   window.print();
 }
 
+
+// ================= HỆ THỐNG ĐỒNG HỒ LED 3D THỜI GIAN THỰC =================
+function initLedLiveClock() {
+  const clockEl = document.getElementById('led-live-clock');
+  if (!clockEl) return;
+  function updateTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    clockEl.innerText = `${h}:${m}:${s}`;
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
+// ================= HỆ THỐNG NHẬT KÝ THAO TÁC HỆ THỐNG (AUDIT LOGS) =================
+let AUDIT_LOGS = [];
+try {
+  const savedLogs = localStorage.getItem('bds_audit_logs');
+  if (savedLogs) AUDIT_LOGS = JSON.parse(savedLogs);
+} catch (e) {}
+
+if (!AUDIT_LOGS || AUDIT_LOGS.length === 0) {
+  AUDIT_LOGS = [
+    { id: 'LOG-001', thoiGian: '11/10/2026 17:50:22', nguoiDung: 'Nguyễn Công Dinh', vaiTro: 'Giám Đốc', hanhDong: 'CẬP NHẬT CẤU HÌNH', doiTuong: 'Logo & VietQR Doanh Nghiệp', chiTiet: 'Lưu cấu hình MB Bank 0393990638' },
+    { id: 'LOG-002', thoiGian: '11/10/2026 17:35:10', nguoiDung: 'Nguyễn Công Dinh', vaiTro: 'Giám Đốc', hanhDong: 'ĐĂNG NHẬP', doiTuong: 'Hệ thống BĐS PRO', chiTiet: 'Đăng nhập phiên làm việc Giám Đốc' },
+    { id: 'LOG-003', thoiGian: '11/10/2026 16:42:05', nguoiDung: 'Lê Văn Hoàng', vaiTro: 'Trưởng Phòng', hanhDong: 'THÊM KHÁCH HÀNG', doiTuong: 'Khách hàng KH055 (Đặng Tuấn Anh)', chiTiet: 'Tạo hồ sơ khách quan tâm Lô A1' },
+    { id: 'LOG-004', thoiGian: '11/10/2026 15:20:18', nguoiDung: 'Nguyễn Thị Mai', vaiTro: 'Sale BĐS', hanhDong: 'XUẤT PHIẾU CỌC', doiTuong: 'Lô đất L0001 (Lô A1)', chiTiet: 'Tạo phiếu đặt cọc VietQR 50.000.000 đ' },
+    { id: 'LOG-005', thoiGian: '11/10/2026 14:10:45', nguoiDung: 'Phạm Thị Thu Thảo', vaiTro: 'Kế Toán', hanhDong: 'KHỚP LỆNH CHUYỂN KHOẢN', doiTuong: 'Giao dịch CK-001 (50.000.000 đ)', chiTiet: 'Khớp cọc thành công vào Lô A1' }
+  ];
+}
+
+function logSystemActivity(hanhDong, doiTuong, chiTiet) {
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  const user = CURRENT_USER || { fullName: 'Hệ Thống', title: 'Khách / Quản trị' };
+  
+  const logItem = {
+    id: 'LOG-' + String(Date.now()).slice(-4),
+    thoiGian: dateStr,
+    nguoiDung: user.fullName || 'Người dùng',
+    vaiTro: user.title || 'Quản trị viên',
+    hanhDong: hanhDong || 'THAO TÁC',
+    doiTuong: doiTuong || 'Dữ liệu',
+    chiTiet: chiTiet || 'Thực hiện thay đổi trong hệ thống'
+  };
+
+  AUDIT_LOGS.unshift(logItem);
+  if (AUDIT_LOGS.length > 100) AUDIT_LOGS.pop();
+
+  try {
+    localStorage.setItem('bds_audit_logs', JSON.stringify(AUDIT_LOGS));
+  } catch (e) {}
+
+  renderAuditLogs();
+}
+
+function renderAuditLogs() {
+  const tbody = document.getElementById('tbody-audit-logs');
+  if (!tbody) return;
+
+  tbody.innerHTML = AUDIT_LOGS.map(log => {
+    let badgeColor = 'bg-slate-100 text-slate-700';
+    if (log.hanhDong.includes('XÓA')) badgeColor = 'bg-rose-100 text-rose-800 font-bold';
+    else if (log.hanhDong.includes('THÊM') || log.hanhDong.includes('CỌC')) badgeColor = 'bg-emerald-100 text-emerald-800 font-bold';
+    else if (log.hanhDong.includes('SỬA') || log.hanhDong.includes('CẤU HÌNH')) badgeColor = 'bg-amber-100 text-amber-800 font-bold';
+    else if (log.hanhDong.includes('KHỚP LỆNH') || log.hanhDong.includes('CHUYỂN KHOẢN')) badgeColor = 'bg-cyan-100 text-cyan-800 font-bold';
+
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="font-mono text-slate-500 whitespace-nowrap p-2">${log.thoiGian}</td>
+        <td class="font-bold text-slate-800 p-2 whitespace-nowrap">${log.nguoiDung}</td>
+        <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">${log.vaiTro}</span></td>
+        <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[10px] ${badgeColor}">${log.hanhDong}</span></td>
+        <td class="font-semibold text-slate-800 p-2">${log.doiTuong}</td>
+        <td class="text-slate-600 p-2">${log.chiTiet}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function clearAuditLogs() {
+  if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử thao tác hệ thống?")) {
+    AUDIT_LOGS = [];
+    try { localStorage.removeItem('bds_audit_logs'); } catch(e){}
+    renderAuditLogs();
+    showToast("Đã dọn sạch nhật ký hệ thống!", "info");
+  }
+}
+
+// ================= HỆ THỐNG LỊCH SỬ CHUYỂN KHOẢN NGÂN HÀNG (VIETQR NAPAS) =================
+let CHUYEN_KHOAN = [];
+try {
+  const savedTransfers = localStorage.getItem('bds_chuyen_khoan');
+  if (savedTransfers) CHUYEN_KHOAN = JSON.parse(savedTransfers);
+} catch (e) {}
+
+if (!CHUYEN_KHOAN || CHUYEN_KHOAN.length === 0) {
+  CHUYEN_KHOAN = [
+    { maCK: 'CK-8921', nganHang: 'MB Bank', stk: '0393990638', nguoiChuyen: 'TRƯƠNG VĂN NAM', soTien: '50.000.000 đ', noiDung: 'COC LO A1 KDC SUN GARDEN', thoiGian: '11/10/2026 14:20', trangThai: 'ĐÃ KHỚP LỆNH' },
+    { maCK: 'CK-8920', nganHang: 'Vietcombank', stk: '0393990638', nguoiChuyen: 'PHAN THỊ OANH', soTien: '100.000.000 đ', noiDung: 'THANH TOAN DOT 1 LO B2', thoiGian: '11/10/2026 10:15', trangThai: 'ĐÃ KHỚP LỆNH' },
+    { maCK: 'CK-8919', nganHang: 'Techcombank', stk: '0393990638', nguoiChuyen: 'NGUYỄN HOÀNG XA', soTien: '50.000.000 đ', noiDung: 'DAT COC LO E7 MEKONG RIVERSIDE', thoiGian: '10/10/2026 16:40', trangThai: 'CHỜ ĐỐI SOÁT' },
+    { maCK: 'CK-8918', nganHang: 'BIDV', stk: '0393990638', nguoiChuyen: 'LÊ HOÀNG CƯỜNG', soTien: '50.000.000 đ', noiDung: 'COC LO F1 MEKONG', thoiGian: '09/10/2026 11:30', trangThai: 'ĐÃ KHỚP LỆNH' }
+  ];
+}
+
+function renderTableChuyenKhoan() {
+  const tbody = document.getElementById('tbody-chuyenkhoan');
+  if (!tbody) return;
+
+  tbody.innerHTML = CHUYEN_KHOAN.map(item => {
+    let stClass = 'bg-amber-100 text-amber-800';
+    if (item.trangThai === 'ĐÃ KHỚP LỆNH') stClass = 'bg-emerald-100 text-emerald-800 font-bold';
+
+    return `
+      <tr>
+        <td class="font-mono font-bold text-slate-900">${item.maCK}</td>
+        <td class="font-semibold text-slate-800"><span class="px-2 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-200">${item.nganHang}</span></td>
+        <td class="font-mono text-slate-700">${item.stk}</td>
+        <td class="font-bold uppercase text-slate-800">${item.nguoiChuyen}</td>
+        <td class="text-right font-black text-emerald-700">${item.soTien}</td>
+        <td class="font-medium text-slate-700">${item.noiDung}</td>
+        <td class="text-slate-400 whitespace-nowrap">${item.thoiGian}</td>
+        <td class="text-center"><span class="stat-badge ${stClass}">${item.trangThai}</span></td>
+        <td class="text-center space-x-1 whitespace-nowrap">
+          <button onclick="matchTransferToLot('${item.maCK}')" class="p-1 px-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold shadow-2xs cursor-pointer" title="Khớp lệnh cọc">
+            <i class="fa fa-check"></i> Khớp
+          </button>
+          <button onclick="deleteTransfer('${item.maCK}')" class="btn-action-delete" title="Xóa">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddTransferModal() {
+  document.getElementById('transfer-modal').classList.remove('hidden');
+  const refInp = document.getElementById('inp-transfer-ref');
+  if (refInp) refInp.value = 'CK-' + Math.floor(1000 + Math.random() * 9000);
+}
+
+function closeTransferModal() {
+  document.getElementById('transfer-modal').classList.add('hidden');
+}
+
+function submitNewTransfer() {
+  const ref = document.getElementById('inp-transfer-ref')?.value.trim() || ('CK-' + Math.floor(1000 + Math.random() * 9000));
+  const bank = document.getElementById('inp-transfer-bank')?.value.trim() || 'MB Bank';
+  const stk = document.getElementById('inp-transfer-stk')?.value.trim() || '0393990638';
+  const sender = document.getElementById('inp-transfer-sender')?.value.trim().toUpperCase() || 'KHÁCH HÀNG';
+  const amount = Number(document.getElementById('inp-transfer-amount')?.value || 50000000);
+  const memo = document.getElementById('inp-transfer-memo')?.value.trim() || 'DAT COC BDS PRO';
+
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const newItem = {
+    maCK: ref,
+    nganHang: bank,
+    stk: stk,
+    nguoiChuyen: sender,
+    soTien: amount.toLocaleString('vi-VN') + ' đ',
+    noiDung: memo,
+    thoiGian: dateStr,
+    trangThai: 'ĐÃ KHỚP LỆNH'
+  };
+
+  CHUYEN_KHOAN.unshift(newItem);
+  try {
+    localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN));
+  } catch (e) {}
+
+  renderTableChuyenKhoan();
+  closeTransferModal();
+
+  logSystemActivity('GHI NHẬN CHUYỂN KHOẢN', `Giao dịch ${ref} (${newItem.soTien})`, `Người chuyển: ${sender} | Nội dung: ${memo}`);
+  showToast(`Đã ghi nhận giao dịch chuyển khoản ${ref} thành công!`, 'success');
+}
+
+function matchTransferToLot(maCK) {
+  const item = CHUYEN_KHOAN.find(x => x.maCK === maCK);
+  if (!item) return;
+  item.trangThai = 'ĐÃ KHỚP LỆNH';
+  try { localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN)); } catch(e){}
+  renderTableChuyenKhoan();
+  logSystemActivity('KHỚP LỆNH CỌC', `Mã ${maCK}`, `Khớp tiền cọc: ${item.soTien} từ ${item.nguoiChuyen}`);
+  showToast(`Đã xác nhận khớp lệnh giao dịch ${maCK} vào hợp đồng thành công!`, 'success');
+}
+
+function deleteTransfer(maCK) {
+  const perm = (CURRENT_USER && ROLE_PERMISSIONS[CURRENT_USER.role]) ? ROLE_PERMISSIONS[CURRENT_USER.role] : ROLE_PERMISSIONS.admin;
+  if (!perm.canDelete) {
+    showToast("⛔ Bạn không có quyền xóa chứng từ chuyển khoản! Chỉ Giám Đốc mới có quyền xóa.", "error");
+    return;
+  }
+  if (!confirm(`Bạn có chắc chắn muốn xóa giao dịch chuyển khoản ${maCK} không?`)) return;
+  CHUYEN_KHOAN = CHUYEN_KHOAN.filter(x => x.maCK !== maCK);
+  try { localStorage.setItem('bds_chuyen_khoan', JSON.stringify(CHUYEN_KHOAN)); } catch(e){}
+  renderTableChuyenKhoan();
+  logSystemActivity('XÓA CHUYỂN KHOẢN', `Mã ${maCK}`, 'Xóa giao dịch khỏi sổ theo dõi ngân hàng');
+  showToast(`Đã xóa giao dịch ${maCK}!`, 'info');
+}
+
+
 // --- TRUNG TÂM CÀI ĐẶT DOANH NGHIỆP THƯƠNG MẠI ---
 function renderCaiDat() {
   initBankSelectOptions();
@@ -4203,6 +4885,10 @@ function resetDefaultDemoData() {
 
 // --- HỆ THỐNG MODAL THÊM / CHỈNH SỬA DỮ LIỆU DÙNG CHUNG (CRUD CHỐNG ĐƠ) ---
 function openEditModal(sheetName, idVal) {
+  if (CURRENT_USER && CURRENT_USER.canEdit === false) {
+    showToast("⛔ Bạn không có quyền chỉnh sửa dữ liệu! Vui lòng liên hệ Quản trị viên.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   if (!cfg) return;
 
@@ -4249,6 +4935,10 @@ function openEditModal(sheetName, idVal) {
 }
 
 function openAddModal(sheetName) {
+  if (CURRENT_USER && CURRENT_USER.canAdd === false) {
+    showToast("⛔ Bạn không có quyền thêm mới dữ liệu! Vui lòng liên hệ Quản trị viên.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   if (!cfg) return;
 
@@ -4338,13 +5028,20 @@ function submitCrudModal() {
       .apiSaveRecord(sheetName, recordData, cfg.idCol);
   }
 
+  logSystemActivity((isEdit ? 'SỬA ' : 'THÊM ') + (cfg.title || sheetName).toUpperCase(), `${cfg.title} (${idVal})`, `Cập nhật dữ liệu vào bảng ${sheetName}`);
   showToast("Đã lưu " + cfg.title + " (" + idVal + ") thành công!", "success");
 }
 
 function confirmDelete(sheetName, idCol, idVal) {
+  if (CURRENT_USER && CURRENT_USER.canDelete === false) {
+    showToast("⛔ Bạn không có quyền xóa dữ liệu này! Chỉ tài khoản có quyền Xóa mới được thực hiện.", "error");
+    return;
+  }
   const cfg = SCHEMA_CONFIG[sheetName];
   const title = cfg ? cfg.title : sheetName;
   if (!confirm(`Bạn có chắc chắn muốn xóa ${title} (${idVal}) không?`)) return;
+
+  logSystemActivity('XÓA DỮ LIỆU', `${title} (${idVal})`, `Xóa bản ghi ${idCol}: ${idVal} khỏi bảng ${sheetName}`);
 
   if (STORE[sheetName]) {
     STORE[sheetName] = STORE[sheetName].filter(x => String(x[idCol]) !== String(idVal));
